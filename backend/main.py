@@ -1,19 +1,18 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from datetime import date
-from typing import Optional
+from typing import Optional, List
 import asyncpg
 import os
-import asyncio
+import uvicorn
 
-POSTGRES_DB_NAME = os.getenv("POSTGRES_DB", None)
-POSTGRES_DB_USER = os.getenv("POSTGRES_USER", None)
-POSTGRES_DB_PASS = os.getenv("POSTGRES_PASSWORD", None)
-POSTGRES_HOSTNAME = os.getenv("POSTGRES_HOSTNAME", None)
-POSTGRES_PORT = os.getenv("POSTGRES_PORT", None)
-
+POSTGRES_DB_NAME = os.getenv("POSTGRES_DB", "postgres")
+POSTGRES_DB_USER = os.getenv("POSTGRES_USER", "postgres")
+POSTGRES_DB_PASS = os.getenv("POSTGRES_PASSWORD", "postgres")
+POSTGRES_HOSTNAME = os.getenv("POSTGRES_HOSTNAME", "postgres")
+POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
 
 class RequestBase(BaseModel):
     date: date
@@ -32,20 +31,29 @@ class RequestCreate(RequestBase):
 class RequestResponse(RequestBase):
     id: int
 
-app = FastAPI()
-async def main():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    try:
+        pool = await asyncpg.create_pool(
+            user=POSTGRES_DB_USER,
+            password=POSTGRES_DB_PASS,
+            database=POSTGRES_DB_NAME,
+            host=POSTGRES_HOSTNAME,
+            port=POSTGRES_PORT,
+            min_size=2,
+            max_size=10
+        )
+        app.state.db_pool = pool
+
+    except Exception as e:
+        raise e
     
-    pool = await asyncpg.create_pool(
-                user=POSTGRES_DB_USER,
-                password=POSTGRES_DB_PASS,
-                database=POSTGRES_DB_NAME,
-                host=POSTGRES_HOSTNAME,
-                port=POSTGRES_PORT,
-            )
-    app.state.db_pool=pool
-    config = uvicorn.Config(app, host="0.0.0.0", port=8000, log_level="info")
-    server = uvicorn.Server(config)
-    await server.serve()
+    yield
+    
+
+    await app.state.db_pool.close()
+
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -55,49 +63,69 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-@app.get("/api/requests", response_model=list[RequestResponse])
-async def get_requests(client:Request):
-    """Выгрузка всех данных из БД"""
-    db_pool = client.app.state.db_pool
+@app.get("/api/requests", response_model=List[RequestResponse])
+async def get_requests():
+    db_pool = app.state.db_pool
+    if not db_pool:
+        raise HTTPException(status_code=503, detail="DB not ready")
+    
     async with db_pool.acquire() as conn:
         rows = await conn.fetch('SELECT * FROM requests ORDER BY request_id ASC')
         
-        return [
-            RequestResponse(
+        result = []
+        for row in rows:
+            result.append(RequestResponse(
                 id=row['request_id'],
                 date=row['req_date'],
                 fullName=row['full_name'],
                 object=row['object_name'],
-                phone=row['phone'],
-                email=row['email'],
-                serialNumbers=row['serial_numbers'],
-                deviceType=row['device_type'],
+                phone=row['phone'] or "",
+                email=row['email'] or "",
+                serialNumbers=row['serial_numbers'] or "",
+                deviceType=row['device_type'] or "",
                 emotion=row['emotion'],
                 issue=row['question_summary']
-            ) for row in rows
-        ]
+            ))
+        return result
 
 @app.post("/api/requests", response_model=RequestResponse)
-async def create_request(client:Request, request: RequestCreate):
-    """Добавление новой записи в БД"""
-    db_pool = client.app.state.db_pool
+async def create_request(request_data: RequestCreate):
+    db_pool = app.state.db_pool
+    if not db_pool:
+        raise HTTPException(status_code=503, detail="DB not ready")
+
     async with db_pool.acquire() as conn:
         query = '''
             INSERT INTO requests 
             (req_date, full_name, object_name, phone, email, serial_numbers, device_type, emotion, question_summary)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-            RETURNING request_id
+            RETURNING request_id, req_date, full_name, object_name, phone, email, serial_numbers, device_type, emotion, question_summary
         '''
-        row_id = await conn.fetchval(
+        row = await conn.fetchrow(
             query,
-            request.date, request.fullName, request.object, request.phone,
-            request.email, request.serialNumbers, request.deviceType,
-            request.emotion, request.issue
+            request_data.date, 
+            request_data.fullName, 
+            request_data.object, 
+            request_data.phone,
+            request_data.email, 
+            request_data.serialNumbers, 
+            request_data.deviceType,
+            request_data.emotion, 
+            request_data.issue
         )
         
-        return RequestResponse(id=row_id, **request.model_dump())
-    
+        return RequestResponse(
+            id=row['request_id'],
+            date=row['req_date'],
+            fullName=row['full_name'],
+            object=row['object_name'],
+            phone=row['phone'] or "",
+            email=row['email'] or "",
+            serialNumbers=row['serial_numbers'] or "",
+            deviceType=row['device_type'] or "",
+            emotion=row['emotion'],
+            issue=row['question_summary']
+        )
+
 if __name__ == "__main__":
-    import uvicorn
-    asyncio.run(main())
+    uvicorn.run(app, host="0.0.0.0", port=8000)
