@@ -25,10 +25,17 @@ export default function RequestsTable() {
     setLoading(true);
     try {
       const response = await fetch('http://localhost:8000/api/requests');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
+      console.log("Получены данные:", data);
       setRecords(data);
     } catch (error) {
       console.error("Ошибка при загрузке данных:", error);
+      setRecords([]); 
     } finally {
       setLoading(false);
     }
@@ -42,12 +49,18 @@ export default function RequestsTable() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       });
+      
+      if (!response.ok) {
+        throw new Error(`Ошибка сохранения: ${response.status}`);
+      }
+
       const createdRecord = await response.json();
       
       setRecords([...records, createdRecord]);
       setFormData(emptyForm); 
     } catch (error) {
       console.error("Ошибка при сохранении данных:", error);
+      alert("Не удалось сохранить запись. Проверьте консоль.");
     }
   };
 
@@ -59,7 +72,6 @@ export default function RequestsTable() {
   return (
     <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
       <h2>Журнал обращений</h2>
-
       <div style={{ marginBottom: '30px', padding: '15px', border: '1px solid #ccc', borderRadius: '5px' }}>
         <h3>Добавить новую запись</h3>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
@@ -79,53 +91,59 @@ export default function RequestsTable() {
           </select>
           <input type="text" name="issue" placeholder="Суть вопроса" value={formData.issue} onChange={handleInputChange} style={{ flexGrow: 1 }} required />
           
-          <button type="submit" style={{ padding: '5px 15px', cursor: 'pointer' }}>Добавить</button>
+          <button type="submit" style={{ padding: '5px 15px', cursor: 'pointer', backgroundColor: '#4CAF50', color: 'white', border: 'none', borderRadius: '3px' }}>
+            Добавить
+          </button>
         </form>
       </div>
 
       {loading ? (
         <p>Загрузка данных...</p>
       ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-          <thead>
-            <tr style={{ backgroundColor: '#080303ff', borderBottom: '2px solid #ddd', color: '#fff' }}>
-              <th style={thStyle}>Дата</th>
-              <th style={thStyle}>ФИО</th>
-              <th style={thStyle}>Объект</th>
-              <th style={thStyle}>Телефон</th>
-              <th style={thStyle}>Email</th>
-              <th style={thStyle}>Заводские номера</th>
-              <th style={thStyle}>Тип приборов</th>
-              <th style={thStyle}>Эмоциональный окрас</th>
-              <th style={thStyle}>Суть вопроса</th>
-            </tr>
-          </thead>
-          <tbody>
-            {records.length === 0 ? (
-              <tr>
-                <td colSpan="9" style={{ textAlign: 'center', padding: '10px' }}>Нет записей</td>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '800px' }}>
+            <thead>
+              <tr style={{ backgroundColor: '#080303ff', borderBottom: '2px solid #ddd', color: '#fff' }}>
+                <th style={thStyle}>Дата</th>
+                <th style={thStyle}>ФИО</th>
+                <th style={thStyle}>Объект</th>
+                <th style={thStyle}>Телефон</th>
+                <th style={thStyle}>Email</th>
+                <th style={thStyle}>Заводские номера</th>
+                <th style={thStyle}>Тип приборов</th>
+                <th style={thStyle}>Эмоциональный окрас</th>
+                <th style={thStyle}>Суть вопроса</th>
               </tr>
-            ) : (
-              records.map(record => (
-                <tr key={record.id} style={{ borderBottom: '1px solid #eee' }}>
-                  <td style={tdStyle}>{record.date}</td>
-                  <td style={tdStyle}>{record.fullName}</td>
-                  <td style={tdStyle}>{record.object}</td>
-                  <td style={tdStyle}>{record.phone}</td>
-                  <td style={tdStyle}>{record.email}</td>
-                  <td style={tdStyle}>{record.serialNumbers}</td>
-                  <td style={tdStyle}>{record.deviceType}</td>
-                  <td style={tdStyle}>{record.emotion}</td>
-                  <td style={tdStyle}>{record.issue}</td>
+            </thead>
+            <tbody>
+              {records.length === 0 ? (
+                <tr>
+                  <td colSpan="9" style={{ ...tdStyle, textAlign: 'center', color: '#777', fontStyle: 'italic' }}>
+                    Нет записей. Добавьте первую запись выше.
+                  </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                records.map((record, index) => (
+                  <tr key={record.id || index} style={{ borderBottom: '1px solid #eee', hover: { backgroundColor: '#f9f9f9' } }}>
+                    <td style={tdStyle}>{record.date || record.req_date ? new Date(record.date || record.req_date).toLocaleDateString() : '-'}</td>
+                    <td style={tdStyle}>{record.fullName || record.full_name || '-'}</td>
+                    <td style={tdStyle}>{record.object || record.object_name || '-'}</td>
+                    <td style={tdStyle}>{record.phone || '-'}</td>
+                    <td style={tdStyle}>{record.email || '-'}</td>
+                    <td style={tdStyle}>{record.serialNumbers || record.serial_numbers || '-'}</td>
+                    <td style={tdStyle}>{record.deviceType || record.device_type || '-'}</td>
+                    <td style={tdStyle}>{record.emotion || '-'}</td>
+                    <td style={tdStyle}>{record.issue || record.question_summary || '-'}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );
 }
 
-const thStyle = { padding: '10px', border: '1px solid #ddd' };
-const tdStyle = { padding: '10px', border: '1px solid #ddd' };
+const thStyle = { padding: '12px', border: '1px solid #ddd', fontWeight: 'bold' };
+const tdStyle = { padding: '12px', border: '1px solid #ddd' };
