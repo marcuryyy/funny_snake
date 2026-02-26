@@ -1,3 +1,21 @@
+# Как развернуть
+Клонируем репо: 
+```
+git clone https://github.com/marcuryyy/funny_snake.git
+```
+
+Заходим в папку с docker-compose файлом:
+```
+cd ./funny_snake/docker-images
+```
+
+Запускаем билд и сервисы:
+```
+docker compose up -d --build
+```
+
+Сайт должен быть доступен по ```localhost:80```
+
 # Идейная реализация решения
 Пользовательский путь (User Flow)
 1. Система получает новые обращения из почтового ящика поддержки.
