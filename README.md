@@ -16,6 +16,15 @@ docker compose up -d --build
 
 Сайт должен быть доступен по ```localhost:80```
 
+Пример .env (надо положить в docker-images)
+```
+POSTGRES_DB=requests_db
+POSTGRES_USER=user
+POSTGRES_PASS=123
+POSTGRES_HOSTNAME=postgres
+POSTGRES_PORT=5432
+```
+
 # Идейная реализация решения
 Пользовательский путь (User Flow)
 1. Система получает новые обращения из почтового ящика поддержки.
