@@ -13,7 +13,7 @@ graph TD
     subgraph AI_Process [Обработка AI]
         AI_Agent --> Classify[Классификация темы]
         Classify --> Extract[Извлечение сути проблемы]
-        Extract --> SearchDB{Есть ответ\nв Базе Знаний?}
+        Extract --> SearchDB{Есть ответв Базе Знаний?}
     end
 
     SearchDB -- Да --> GenAnswer[Генерация ответа]
