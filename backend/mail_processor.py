@@ -32,7 +32,7 @@ async def process_letter_and_send_to_api(letter_text: str):
         object=extracted_data.get("object", ""),
         phone=extracted_data.get("phone", ""),
         email=extracted_data.get("email", ""),
-        serialNumbers=extracted_data.get("serial_numbers", ""),
+        factoryNumber=extracted_data.get("factory_number", ""),
         deviceType=extracted_data.get("device_type", ""),
         emotion=extracted_data.get("emotional_tone", ""),
         issue=extracted_data.get("issue_summary"),
