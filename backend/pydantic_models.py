@@ -27,6 +27,7 @@ class RequestBase(BaseModel):
     deviceType: Optional[str] = ""
     emotion: str
     issue: str
+    llm_answer: str
     message_id: str
 
 
@@ -36,6 +37,7 @@ class RequestCreate(RequestBase):
 
 class RequestResponse(RequestBase):
     id: int
+    task_status: str
 
 
 class AddNewRow(BaseModel):

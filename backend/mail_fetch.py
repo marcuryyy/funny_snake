@@ -100,7 +100,7 @@ def fetch_emails(limit=None, save_attachments_dir=None):
     print("success")
     mail.select("INBOX")
 
-    status, data = mail.search(None, "UNSEEN")
+    status, data = mail.search(None, "ALL")
     if status != "OK":
         mail.logout()
         return []
