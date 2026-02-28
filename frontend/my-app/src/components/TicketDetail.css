@@ -22,14 +22,24 @@
 }
 
 .ticket-detail {
+<<<<<<< Updated upstream
   background: #ffffff;
   border-radius: 8px;
+=======
+  background: white;
+  border-radius: 12px;
+>>>>>>> Stashed changes
   width: 90%;
   max-width: 700px;
   max-height: 90vh;
   overflow-y: auto;
+<<<<<<< Updated upstream
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   animation: slideUp 0.2s ease;
+=======
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease;
+>>>>>>> Stashed changes
 }
 
 @keyframes slideUp {
@@ -47,6 +57,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+<<<<<<< Updated upstream
   padding: 16px 20px;
   border-bottom: 1px solid #e5e7eb;
   position: sticky;
@@ -54,13 +65,25 @@
   background: #ffffff;
   border-radius: 8px 8px 0 0;
   z-index: 1;
+=======
+  padding: 20px 24px;
+  border-bottom: 1px solid #e0e0e0;
+  position: sticky;
+  top: 0;
+  background: white;
+  border-radius: 12px 12px 0 0;
+>>>>>>> Stashed changes
 }
 
 .ticket-detail-header h2 {
   margin: 0;
   font-size: 18px;
+<<<<<<< Updated upstream
   color: #111827;
   font-weight: 600;
+=======
+  color: #1a1a2e;
+>>>>>>> Stashed changes
 }
 
 .btn-close {
@@ -68,14 +91,71 @@
   border: none;
   font-size: 20px;
   cursor: pointer;
+<<<<<<< Updated upstream
   color: #6b7280;
   padding: 4px 8px;
   border-radius: 4px;
   transition: background 0.15s;
+=======
+  color: #666;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background 0.2s;
+>>>>>>> Stashed changes
 }
 
 .btn-close:hover {
   background: #f3f4f6;
+}
+
+.ticket-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  border-bottom: 1px solid #e0e0e0;
+  flex-wrap: wrap;
+}
+
+.status-label {
+  font-size: 13px;
+  color: #666;
+  font-weight: 500;
+}
+
+.status-selector {
+  display: flex;
+  gap: 8px;
+}
+
+.status-option {
+  padding: 6px 12px;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  background: #f5f5f5;
+  color: #333;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.status-option:hover {
+  background: #e0e0e0;
+}
+
+.status-option.active {
+  background: #f5f5f5;
+  font-weight: 600;
+}
+
+.status-badge-detail {
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  margin-left: auto;
 }
 
 .ticket-info-grid {
@@ -110,8 +190,13 @@
 }
 
 .emotion-badge-detail {
+<<<<<<< Updated upstream
   padding: 4px 10px;
   border-radius: 12px;
+=======
+  padding: 4px 12px;
+  border-radius: 4px;
+>>>>>>> Stashed changes
   font-size: 13px;
   font-weight: 500;
   display: inline-flex;
@@ -133,19 +218,31 @@
 }
 
 .response-section h3 {
+<<<<<<< Updated upstream
   margin: 0 0 12px 0;
   font-size: 14px;
   color: #111827;
   font-weight: 600;
+=======
+  margin: 0 0 16px 0;
+  font-size: 15px;
+  color: #1a1a2e;
+>>>>>>> Stashed changes
 }
 
 .response-textarea {
   width: 100%;
   min-height: 120px;
   padding: 12px;
+<<<<<<< Updated upstream
   border: 1px solid #d1d5db;
   border-radius: 6px;
   font-size: 13px;
+=======
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+>>>>>>> Stashed changes
   font-family: inherit;
   resize: vertical;
   transition: border-color 0.15s, box-shadow 0.15s;
@@ -154,8 +251,12 @@
 
 .response-textarea:focus {
   outline: none;
+<<<<<<< Updated upstream
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+=======
+  border-color: #333;
+>>>>>>> Stashed changes
 }
 
 .action-buttons {
@@ -165,6 +266,7 @@
 }
 
 .btn-send {
+<<<<<<< Updated upstream
   background: #2563eb;
   color: #ffffff;
   border: 1px solid #2563eb;
@@ -194,6 +296,30 @@
   padding: 8px 16px;
   border-radius: 6px;
   font-size: 13px;
+=======
+  background: #333;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-send:hover {
+  background: #444;
+}
+
+.btn-secondary {
+  background: #f0f0f0;
+  color: #333;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+>>>>>>> Stashed changes
   font-weight: 500;
   cursor: pointer;
   transition: all 0.15s ease;

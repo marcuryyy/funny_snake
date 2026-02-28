@@ -26,7 +26,7 @@ function AnalyticsPanel() {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(API_URL);
+      const response = await fetch(`${API_URL}?page=1&limit=1000`);
       if (!response.ok) {
         throw new Error(`Ошибка HTTP: ${response.status}`);
       }
@@ -52,10 +52,10 @@ function AnalyticsPanel() {
     return (
       <div className="error-container">
         <div className="error-message">
-          <h3>⚠️ Ошибка загрузки данных</h3>
+          <h3>Ошибка загрузки данных</h3>
           <p>{error}</p>
           <button onClick={fetchAnalytics} className="btn-retry">
-            🔄 Повторить
+            Повторить
           </button>
         </div>
       </div>
@@ -65,13 +65,12 @@ function AnalyticsPanel() {
   if (tickets.length === 0) {
     return (
       <div className="no-data">
-        <h3>📭 Нет данных для отображения</h3>
+        <h3>Нет данных для отображения</h3>
         <p>Обращения пока не добавлены в систему</p>
       </div>
     );
   }
 
-  // Группировка по эмоциям
   const emotionDistribution = Object.entries(
     tickets.reduce((acc, t) => {
       acc[t.emotion] = (acc[t.emotion] || 0) + 1;
@@ -79,7 +78,6 @@ function AnalyticsPanel() {
     }, {})
   ).map(([name, value]) => ({ name, value }));
 
-  // Группировка по устройствам
   const deviceDistribution = Object.entries(
     tickets.reduce((acc, t) => {
       acc[t.deviceType] = (acc[t.deviceType] || 0) + 1;
@@ -87,7 +85,6 @@ function AnalyticsPanel() {
     }, {})
   ).map(([name, value]) => ({ name, value }));
 
-  // Группировка по датам
   const ticketsByDay = Object.entries(
     tickets.reduce((acc, t) => {
       acc[t.date] = (acc[t.date] || 0) + 1;
@@ -97,7 +94,6 @@ function AnalyticsPanel() {
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([day, count]) => ({ day, count }));
 
-  // Группировка по объектам
   const objectDistribution = Object.entries(
     tickets.reduce((acc, t) => {
       acc[t.object] = (acc[t.object] || 0) + 1;
@@ -106,20 +102,19 @@ function AnalyticsPanel() {
   ).map(([name, value]) => ({ name, value }));
 
   const stats = [
-    { label: 'Всего обращений', value: tickets.length, icon: '📊' },
-    { label: 'Уникальных объектов', value: new Set(tickets.map((t) => t.object)).size, icon: '🏢' },
-    { label: 'Типов устройств', value: new Set(tickets.map((t) => t.deviceType)).size, icon: '🔧' },
-    { label: 'Дней записей', value: new Set(tickets.map((t) => t.date)).size, icon: '📅' },
+    { label: 'Всего обращений', value: tickets.length, icon: '' },
+    { label: 'Уникальных объектов', value: new Set(tickets.map((t) => t.object)).size, icon: '' },
+    { label: 'Типов устройств', value: new Set(tickets.map((t) => t.deviceType)).size, icon: '' },
+    { label: 'Дней записей', value: new Set(tickets.map((t) => t.date)).size, icon: '' },
   ];
 
   return (
     <div className="analytics-panel">
-      <h2>📈 Аналитика обращений</h2>
+      <h2>Аналитика обращений</h2>
 
       <div className="stats-grid">
         {stats.map((stat) => (
           <div key={stat.label} className="stat-card">
-            <span className="stat-icon">{stat.icon}</span>
             <div className="stat-info">
               <span className="stat-value">{stat.value}</span>
               <span className="stat-label">{stat.label}</span>

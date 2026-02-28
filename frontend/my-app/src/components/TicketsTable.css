@@ -14,12 +14,17 @@
 .tickets-header h2 {
   margin: 0;
   font-size: 20px;
+<<<<<<< Updated upstream
   color: #111827;
   font-weight: 600;
+=======
+  color: #1a1a2e;
+>>>>>>> Stashed changes
 }
 
 .header-actions {
   display: flex;
+<<<<<<< Updated upstream
   gap: 8px;
 }
 
@@ -52,6 +57,57 @@
 .btn-refresh:hover, .btn-export:hover {
   background: #f3f4f6;
   border-color: #9ca3af;
+=======
+  gap: 10px;
+}
+
+.btn-add {
+  background: #333;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.btn-add:hover {
+  background: #444;
+}
+
+.btn-refresh {
+  background: #f0f0f0;
+  color: #333;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-refresh:hover {
+  background: #e0e0e0;
+}
+
+.btn-export {
+  background: #fff;
+  color: #333;
+  border: 1px solid #e0e0e0;
+  padding: 10px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-export:hover {
+  border-color: #333;
+>>>>>>> Stashed changes
 }
 
 .filters {
@@ -63,6 +119,7 @@
 
 .search-input {
   flex: 1;
+<<<<<<< Updated upstream
   min-width: 250px;
   padding: 8px 12px;
   border: 1px solid #d1d5db;
@@ -70,10 +127,19 @@
   font-size: 13px;
   transition: border-color 0.15s;
   background: #ffffff;
+=======
+  min-width: 200px;
+  padding: 10px 14px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+>>>>>>> Stashed changes
 }
 
 .search-input:focus {
   outline: none;
+<<<<<<< Updated upstream
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
@@ -84,6 +150,17 @@
   border-radius: 6px;
   font-size: 13px;
   background: #ffffff;
+=======
+  border-color: #333;
+}
+
+.filters select {
+  padding: 10px 14px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+>>>>>>> Stashed changes
   cursor: pointer;
   transition: border-color 0.15s;
   color: #374151;
@@ -91,6 +168,7 @@
 
 .filters select:focus {
   outline: none;
+<<<<<<< Updated upstream
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
@@ -185,12 +263,38 @@
 .date-cell {
   color: #9ca3af;
   font-family: monospace;
+=======
+  border-color: #333;
+}
+
+.date-input {
+  padding: 10px 14px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.date-input:focus {
+  outline: none;
+  border-color: #333;
+}
+
+.tickets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+>>>>>>> Stashed changes
 }
 
 .no-results {
   text-align: center;
   padding: 48px;
+<<<<<<< Updated upstream
   color: #6b7280;
+=======
+  color: #666;
+>>>>>>> Stashed changes
   font-size: 14px;
 }
 
@@ -198,7 +302,11 @@
   padding: 48px;
   text-align: center;
   font-size: 14px;
+<<<<<<< Updated upstream
   color: #6b7280;
+=======
+  color: #666;
+>>>>>>> Stashed changes
 }
 
 .error-container {
@@ -210,8 +318,13 @@
 }
 
 .error-message {
+<<<<<<< Updated upstream
   background: #fef2f2;
   border: 1px solid #fecaca;
+=======
+  background: #ffebee;
+  border: 1px solid #ef5350;
+>>>>>>> Stashed changes
   border-radius: 8px;
   padding: 24px;
   text-align: center;
@@ -220,17 +333,26 @@
 
 .error-message h3 {
   margin: 0 0 12px 0;
+<<<<<<< Updated upstream
   color: #dc2626;
+=======
+  color: #c62828;
+>>>>>>> Stashed changes
   font-size: 16px;
 }
 
 .error-message p {
   margin: 0 0 16px 0;
+<<<<<<< Updated upstream
   color: #6b7280;
+=======
+  color: #666;
+>>>>>>> Stashed changes
   font-size: 13px;
 }
 
 .btn-retry {
+<<<<<<< Updated upstream
   background: #ffffff;
   color: #374151;
   border: 1px solid #d1d5db;
@@ -244,4 +366,53 @@
 
 .btn-retry:hover {
   background: #f3f4f6;
+=======
+  background: #333;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-retry:hover {
+  background: #444;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.btn-page {
+  background: white;
+  border: 1px solid #e0e0e0;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-page:hover:not(:disabled) {
+  border-color: #333;
+}
+
+.btn-page:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-info {
+  font-size: 14px;
+  color: #666;
+>>>>>>> Stashed changes
 }

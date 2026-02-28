@@ -1,9 +1,24 @@
 import { useState } from 'react';
 import './TicketDetail.css';
 
+const STATUS_OPTIONS = [
+  { value: 'new', label: 'Новый', color: '#1976d2' },
+  { value: 'in_progress', label: 'В работе', color: '#f57c00' },
+  { value: 'closed', label: 'Закрыт', color: '#388e3c' },
+];
+
 function TicketDetail({ ticket, onClose }) {
-  const [response, setResponse] = useState('');
+  const [response, setResponse] = useState(ticket.response || '');
   const [sending, setSending] = useState(false);
+  const [status, setStatus] = useState(ticket.status || 'new');
+
+  const currentStatus = STATUS_OPTIONS.find(s => s.value === status) || STATUS_OPTIONS[0];
+
+  const handleStatusChange = async (newStatus) => {
+    setStatus(newStatus);
+    // Здесь будет API вызов для обновления статуса
+    console.log('Статус изменён на:', newStatus);
+  };
 
   const handleSendResponse = async () => {
     if (!response.trim()) {
@@ -14,10 +29,8 @@ function TicketDetail({ ticket, onClose }) {
     setSending(true);
     try {
       // Здесь будет отправка ответа через API
-      // Пока просто имитируем отправку
       await new Promise((resolve) => setTimeout(resolve, 500));
       alert(`Ответ отправлен клиенту ${ticket.fullName}`);
-      setResponse('');
       onClose();
     } catch (error) {
       console.error('Ошибка отправки ответа:', error);
@@ -33,8 +46,30 @@ function TicketDetail({ ticket, onClose }) {
         <div className="ticket-detail-header">
           <h2>Обращение #{ticket.id}</h2>
           <button className="btn-close" onClick={onClose} disabled={sending}>
-            ✕
+            Закрыть
           </button>
+        </div>
+
+        <div className="ticket-status-bar">
+          <span className="status-label">Статус:</span>
+          <div className="status-selector">
+            {STATUS_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                className={`status-option ${status === opt.value ? 'active' : ''}`}
+                style={{ borderColor: opt.color }}
+                onClick={() => handleStatusChange(opt.value)}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          <span 
+            className="status-badge-detail" 
+            style={{ backgroundColor: currentStatus.color }}
+          >
+            {currentStatus.label}
+          </span>
         </div>
 
         <div className="ticket-info-grid">
@@ -77,7 +112,7 @@ function TicketDetail({ ticket, onClose }) {
         </div>
 
         <div className="response-section">
-          <h3>📝 Ответ клиенту</h3>
+          <h3>Ответ клиенту</h3>
           <textarea
             value={response}
             onChange={(e) => setResponse(e.target.value)}
@@ -87,15 +122,15 @@ function TicketDetail({ ticket, onClose }) {
             disabled={sending}
           />
           <div className="action-buttons">
-            <button 
-              className="btn-send" 
+            <button
+              className="btn-send"
               onClick={handleSendResponse}
               disabled={sending || !response.trim()}
             >
-              {sending ? '⏳ Отправка...' : '✉️ Отправить ответ'}
+              {sending ? 'Отправка...' : 'Отправить ответ'}
             </button>
-            <button 
-              className="btn-secondary" 
+            <button
+              className="btn-secondary"
               onClick={onClose}
               disabled={sending}
             >

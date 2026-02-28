@@ -1,11 +1,19 @@
 :root {
+<<<<<<< Updated upstream
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+=======
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+>>>>>>> Stashed changes
   line-height: 1.5;
   font-weight: 400;
 
   color-scheme: light;
   color: #213547;
+<<<<<<< Updated upstream
   background-color: #ffffff;
+=======
+  background-color: #f5f5f5;
+>>>>>>> Stashed changes
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -23,6 +31,7 @@ body {
   min-height: 100vh;
 }
 
+<<<<<<< Updated upstream
 a {
   font-weight: 500;
   color: #2563eb;
@@ -30,6 +39,20 @@ a {
 }
 a:hover {
   color: #1d4ed8;
+=======
+#root {
+  width: 100%;
+}
+
+a {
+  font-weight: 500;
+  color: #333;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #555;
+>>>>>>> Stashed changes
 }
 
 h1 {
@@ -39,6 +62,7 @@ h1 {
 
 button {
   border-radius: 6px;
+<<<<<<< Updated upstream
   border: 1px solid #d1d5db;
   padding: 0.5em 1em;
   font-size: 0.875rem;
@@ -62,4 +86,23 @@ button:focus-visible {
 input, select, textarea {
   font-family: inherit;
   font-size: 0.875rem;
+=======
+  border: 1px solid transparent;
+  padding: 0.5em 1em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+button:focus,
+button:focus-visible {
+  outline: 2px solid #333;
+  outline-offset: 2px;
+}
+
+input, select, textarea {
+  font-family: inherit;
+>>>>>>> Stashed changes
 }

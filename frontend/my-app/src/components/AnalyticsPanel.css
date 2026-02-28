@@ -7,27 +7,40 @@
 .analytics-panel h2 {
   margin: 0 0 24px 0;
   font-size: 20px;
+<<<<<<< Updated upstream
   color: #111827;
   font-weight: 600;
+=======
+  color: #1a1a2e;
+>>>>>>> Stashed changes
 }
 
 .loading-analytics {
   padding: 48px;
   text-align: center;
   font-size: 14px;
+<<<<<<< Updated upstream
   color: #6b7280;
+=======
+  color: #666;
+>>>>>>> Stashed changes
 }
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 16px;
   margin-bottom: 24px;
 }
 
 .stat-card {
+<<<<<<< Updated upstream
   background: #ffffff;
   border: 1px solid #e5e7eb;
+=======
+  background: white;
+  border: 1px solid #e0e0e0;
+>>>>>>> Stashed changes
   border-radius: 8px;
   padding: 20px;
   display: flex;
@@ -36,7 +49,7 @@
 }
 
 .stat-icon {
-  font-size: 32px;
+  font-size: 28px;
 }
 
 .stat-info {
@@ -45,6 +58,7 @@
 }
 
 .stat-value {
+<<<<<<< Updated upstream
   font-size: 28px;
   font-weight: 700;
   color: #111827;
@@ -53,6 +67,16 @@
 .stat-label {
   font-size: 13px;
   color: #6b7280;
+=======
+  font-size: 24px;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #666;
+>>>>>>> Stashed changes
 }
 
 .charts-row {
@@ -63,8 +87,13 @@
 }
 
 .chart-card {
+<<<<<<< Updated upstream
   background: #ffffff;
   border: 1px solid #e5e7eb;
+=======
+  background: white;
+  border: 1px solid #e0e0e0;
+>>>>>>> Stashed changes
   border-radius: 8px;
   padding: 20px;
 }
@@ -75,9 +104,14 @@
 
 .chart-card h3 {
   margin: 0 0 16px 0;
+<<<<<<< Updated upstream
   font-size: 14px;
   color: #111827;
   font-weight: 600;
+=======
+  font-size: 15px;
+  color: #1a1a2e;
+>>>>>>> Stashed changes
 }
 
 .no-data {
@@ -87,13 +121,22 @@
 
 .no-data h3 {
   margin: 0 0 8px 0;
+<<<<<<< Updated upstream
   color: #6b7280;
+=======
+  color: #666;
+>>>>>>> Stashed changes
   font-size: 18px;
 }
 
 .no-data p {
   margin: 0;
+<<<<<<< Updated upstream
   color: #9ca3af;
+=======
+  color: #999;
+  font-size: 14px;
+>>>>>>> Stashed changes
 }
 
 .error-container {
@@ -105,8 +148,13 @@
 }
 
 .error-message {
+<<<<<<< Updated upstream
   background: #fef2f2;
   border: 1px solid #fecaca;
+=======
+  background: #ffebee;
+  border: 1px solid #ef5350;
+>>>>>>> Stashed changes
   border-radius: 8px;
   padding: 24px;
   text-align: center;
@@ -115,17 +163,26 @@
 
 .error-message h3 {
   margin: 0 0 12px 0;
+<<<<<<< Updated upstream
   color: #dc2626;
+=======
+  color: #c62828;
+>>>>>>> Stashed changes
   font-size: 16px;
 }
 
 .error-message p {
   margin: 0 0 16px 0;
+<<<<<<< Updated upstream
   color: #6b7280;
+=======
+  color: #666;
+>>>>>>> Stashed changes
   font-size: 13px;
 }
 
 .btn-retry {
+<<<<<<< Updated upstream
   background: #ffffff;
   color: #374151;
   border: 1px solid #d1d5db;
@@ -139,4 +196,19 @@
 
 .btn-retry:hover {
   background: #f3f4f6;
+=======
+  background: #333;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-retry:hover {
+  background: #444;
+>>>>>>> Stashed changes
 }

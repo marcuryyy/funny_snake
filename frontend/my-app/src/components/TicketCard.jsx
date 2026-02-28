@@ -1,37 +1,30 @@
 import './TicketCard.css';
 
-function TicketCard({ ticket, onSelect }) {
-  const emotionColors = {
-    гнев: 'emotion-angry',
-    раздражение: 'emotion-annoyed',
-    тревога: 'emotion-worried',
-    разочарование: 'emotion-disappointed',
-    удивление: 'emotion-surprised',
-    спокойствие: 'emotion-calm',
-  };
+const STATUS_LABELS = {
+  new: { label: 'Новый', color: 'status-new' },
+  in_progress: { label: 'В работе', color: 'status-progress' },
+  closed: { label: 'Закрыт', color: 'status-closed' },
+};
 
-  const emotionIcons = {
-    гнев: '😠',
-    раздражение: '😤',
-    тревога: '😰',
-    разочарование: '😞',
-    удивление: '😮',
-    спокойствие: '😌',
-  };
+function TicketCard({ ticket, onSelect }) {
+  const status = ticket.status || 'new';
+  const statusInfo = STATUS_LABELS[status] || STATUS_LABELS.new;
 
   return (
-    <div className={`ticket-card ${emotionColors[ticket.emotion] || ''}`} onClick={() => onSelect(ticket)}>
+    <div className="ticket-card" onClick={() => onSelect(ticket)}>
       <div className="ticket-header">
-        <span className="emotion-badge">
-          {emotionIcons[ticket.emotion] || '😐'} {ticket.emotion}
+        <span className={`status-badge ${statusInfo.color}`}>
+          {statusInfo.label}
         </span>
-        <span className="device-type">{ticket.deviceType}</span>
+        <span className="emotion-badge">
+          {ticket.emotion}
+        </span>
       </div>
       <h3 className="ticket-issue">{ticket.issue}</h3>
-      <p className="ticket-name">👤 {ticket.fullName}</p>
-      <p className="ticket-object">📍 {ticket.object}</p>
+      <p className="ticket-name">{ticket.fullName}</p>
+      <p className="ticket-object">{ticket.object}</p>
       <div className="ticket-footer">
-        {ticket.phone && <span className="ticket-phone">📞 {ticket.phone}</span>}
+        {ticket.phone && <span className="ticket-phone">{ticket.phone}</span>}
         <span className="ticket-date">{ticket.date}</span>
       </div>
     </div>
