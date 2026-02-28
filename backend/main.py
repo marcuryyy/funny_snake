@@ -72,8 +72,9 @@ def parse_date_string(date_str: str) -> date:
 
     return date.today()
 
+
 async def get_filtered_requests(
-    db_pool, 
+    db_pool,
     full_name: Optional[str],
     object_name: Optional[str],
     phone: Optional[str],
@@ -83,7 +84,7 @@ async def get_filtered_requests(
     date_from: Optional[str],
     date_to: Optional[str],
     limit: Optional[int] = None,
-    offset: Optional[int] = None
+    offset: Optional[int] = None,
 ) -> List[RequestResponse]:
     """Возвращает отфильтрованные запросы из БД"""
     if not db_pool:
@@ -104,7 +105,7 @@ async def get_filtered_requests(
     ]
 
     async with db_pool.acquire() as conn:
-        base_query = '''
+        base_query = """
             SELECT * FROM requests 
             WHERE ($1::text IS NULL OR LOWER(full_name) LIKE LOWER($1))
               AND ($2::text IS NULL OR LOWER(object_name) LIKE LOWER($2))
@@ -114,31 +115,33 @@ async def get_filtered_requests(
               AND ($6::text IS NULL OR LOWER(question_summary) LIKE LOWER($6))
               AND ($7::date IS NULL OR req_date >= $7)
               AND ($8::date IS NULL OR req_date <= $8)
-        '''
-        
+        """
+
         if limit is not None and offset is not None:
             base_query += " ORDER BY request_id ASC LIMIT $9 OFFSET $10"
             params.extend([limit, offset])
         else:
             base_query += " ORDER BY request_id ASC"
-        
         rows = await conn.fetch(base_query, *params)
-        
+
         result = []
         for row in rows:
-            result.append(RequestResponse(
-                id=row['request_id'],
-                date=date_to_str(row['req_date']),
-                fullName=row['full_name'] or "",
-                object=row['object_name'] or "",
-                phone=row['phone'] or "",
-                email=row['email'] or "",
-                serialNumbers=row['serial_numbers'] or "",
-                deviceType=row['device_type'] or "",
-                emotion=row['emotion'],
-                issue=row['question_summary'] or ""
-            ))
+            result.append(
+                RequestResponse(
+                    id=row["request_id"],
+                    date=date_to_str(row["req_date"]),
+                    fullName=row["full_name"] or "",
+                    object=row["object_name"] or "",
+                    phone=row["phone"] or "",
+                    email=row["email"] or "",
+                    serialNumbers=row["serial_numbers"] or "",
+                    deviceType=row["device_type"] or "",
+                    emotion=row["emotion"],
+                    issue=row["question_summary"] or "",
+                )
+            )
         return result
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -188,7 +191,7 @@ async def get_requests(
 ):
     """Получить список запросов с фильтрами и пагинацией"""
     offset = (page - 1) * limit
-    
+
     result = await get_filtered_requests(
         db_pool=app.state.db_pool,
         full_name=full_name,
@@ -200,7 +203,7 @@ async def get_requests(
         date_from=date_from,
         date_to=date_to,
         limit=limit,
-        offset=offset
+        offset=offset,
     )
     return result
 
@@ -242,6 +245,7 @@ async def get_mails():
     msgs = fetch_emails(limit=10, save_attachments_dir="attachments")
     return msgs
 
+
 @app.get("/api/getCsv")
 async def get_table_csv(
     full_name: Optional[str] = Query(None),
@@ -260,23 +264,16 @@ async def get_table_csv(
 
     async def generate_csv():
         async with db_pool.acquire() as conn:
-            headers_query = """
-                SELECT column_name 
-                FROM information_schema.columns 
-                WHERE table_name = 'requests' 
-                ORDER BY ordinal_position
-            """
-            headers_result = await conn.fetch(headers_query)
-            headers = [row['column_name'] for row in headers_result]
-            
+            headers = list(RequestResponse.model_fields.keys())
+
             output = io.StringIO()
             writer = csv.writer(output)
             writer.writerow(headers)
             yield output.getvalue()
-            
+
             batch_size = 5000
             offset = 0
-            
+
             while True:
                 batch = await get_filtered_requests(
                     db_pool=db_pool,
@@ -289,39 +286,36 @@ async def get_table_csv(
                     date_from=date_from,
                     date_to=date_to,
                     limit=batch_size,
-                    offset=offset
+                    offset=offset,
                 )
-                
+
                 if not batch:
                     break
-                
+
                 csv_rows = []
                 for row in batch:
-                    # Предполагаем, что row имеет метод .dict(), иначе адаптируйте под вашу модель
-                    row_dict = row.dict() if hasattr(row, 'dict') else dict(row)
+                    row_dict = row.dict() if hasattr(row, "dict") else dict(row)
                     csv_row = [str(row_dict.get(h, "")) for h in headers]
                     csv_rows.append(csv_row)
-                
-                # Формируем CSV для текущего батча
+
                 output = io.StringIO()
                 writer = csv.writer(output)
                 writer.writerows(csv_rows)
                 yield output.getvalue()
-                
-                # Очищаем буфер для следующего цикла (опционально, так как создается новый StringIO)
+
                 output.close()
-                
+
                 offset += batch_size
 
     filename = f"requests_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-    
+
     return StreamingResponse(
         generate_csv(),
         media_type="text/csv",
         headers={
             "Content-Disposition": f'attachment; filename="{filename}"',
-            "Content-Type": "text/csv; charset=utf-8-sig"
-        }
+            "Content-Type": "text/csv; charset=utf-8-sig",
+        },
     )
 
 
