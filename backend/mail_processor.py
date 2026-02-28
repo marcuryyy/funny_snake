@@ -29,12 +29,12 @@ async def process_letter_and_send_to_api(letter_text: str):
     request_payload = RequestCreate(
             date=extracted_data.get("date", extracted_data.get("date", "")),
             fullName=extracted_data.get("ФИО", extracted_data.get("full_name", "")),
-            object=extracted_data.get("Объект", extracted_data.get("object_name", "")),
+            object=extracted_data.get("Объект", extracted_data.get("object", "")),
             phone=extracted_data.get("Телефон", extracted_data.get("phone", "")),
             email=extracted_data.get("Email", extracted_data.get("email", "")),
-            serialNumbers=extracted_data.get("Серийный номер", extracted_data.get("serial_number", "")),
+            serialNumbers=extracted_data.get("Серийный номер", extracted_data.get("serial_numbers", "")),
             deviceType=extracted_data.get("Тип устройства", extracted_data.get("device_type", "")),
-            emotion=extracted_data.get("Эмоция", extracted_data.get("emotion", "neutral")),
+            emotion=extracted_data.get("Эмоция", extracted_data.get("emotional_tone", "")),
             issue=extracted_data.get("Вопрос", extracted_data.get("issue_summary", ""))
         )
     
