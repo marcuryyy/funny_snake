@@ -31,8 +31,19 @@ class RequestBase(BaseModel):
     message_id: str
 
 
-class RequestCreate(RequestBase):
-    pass
+class RequestCreate(BaseModel):
+    date: str
+    fullName: str
+    object: str
+    phone: Optional[str] = ""
+    email: Optional[str] = ""
+    factoryNumber: Optional[str] = ""
+    deviceType: Optional[str] = ""
+    emotion: str
+    issue: str
+    llm_answer: Optional[str] = ""
+    message_id: Optional[str] = ""
+    task_status: Optional[str] = "OPEN"
 
 
 class RequestResponse(RequestBase):
