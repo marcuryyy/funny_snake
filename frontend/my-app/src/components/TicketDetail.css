@@ -76,56 +76,6 @@
   background: #f0f0f0;
 }
 
-.ticket-status-bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 24px;
-  border-bottom: 1px solid #e0e0e0;
-  flex-wrap: wrap;
-}
-
-.status-label {
-  font-size: 13px;
-  color: #666;
-  font-weight: 500;
-}
-
-.status-selector {
-  display: flex;
-  gap: 8px;
-}
-
-.status-option {
-  padding: 6px 12px;
-  border: 2px solid transparent;
-  border-radius: 4px;
-  background: #f5f5f5;
-  color: #333;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.status-option:hover {
-  background: #e0e0e0;
-}
-
-.status-option.active {
-  background: #f5f5f5;
-  font-weight: 600;
-}
-
-.status-badge-detail {
-  padding: 4px 12px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 600;
-  color: white;
-  margin-left: auto;
-}
-
 .ticket-info-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -172,19 +122,46 @@
   color: #333;
 }
 
-.response-section {
+.mail-section {
   padding: 24px;
 }
 
-.response-section h3 {
+.mail-section h3 {
   margin: 0 0 16px 0;
   font-size: 15px;
   color: #1a1a2e;
 }
 
-.response-textarea {
+.form-group {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-size: 13px;
+  color: #666;
+  font-weight: 500;
+}
+
+.input-field {
+  padding: 10px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: #333;
+}
+
+.textarea-field {
   width: 100%;
-  min-height: 120px;
+  min-height: 200px;
   padding: 12px;
   border: 1px solid #e0e0e0;
   border-radius: 6px;
@@ -195,7 +172,7 @@
   box-sizing: border-box;
 }
 
-.response-textarea:focus {
+.textarea-field:focus {
   outline: none;
   border-color: #333;
 }
