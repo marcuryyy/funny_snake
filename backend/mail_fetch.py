@@ -92,7 +92,10 @@ def get_attachments(msg, save_dir=None):
     return files
 
 def fetch_emails(limit=None, save_attachments_dir=None):
+    EMAIL_USER = os.getenv("IMAP_EMAIL", "enigma_hack@mail.ru")
+    EMAIL_PASS = os.getenv("EXTERNAL_PASS", "rgPRLpzseUkkV9zSvsbj")
     mail = imaplib.IMAP4_SSL(IMAP_SERVER)
+   # print(EMAIL_PASS, EMAIL_USER)
     mail.login(EMAIL_USER, EMAIL_PASS)
     print("success")
     mail.select("INBOX")

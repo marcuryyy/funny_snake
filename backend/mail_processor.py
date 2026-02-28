@@ -1,10 +1,18 @@
 import asyncio
 import datetime
+import os
 from pydantic_models import RequestCreate
 import httpx
 from typing import Optional, Dict, Any
-
+from mail_fetch import fetch_emails
 from model_requester import LLMPipeline 
+from dotenv import load_dotenv
+
+load_dotenv()
+
+IMAP_SERVER = "imap.mail.ru"
+EMAIL_USER = os.getenv("IMAP_EMAIL", "enigma_hack@mail.ru")
+EMAIL_PASS = os.getenv("EXTERNAL_PASS", "rgPRLpzseUkkV9zSvsbj")
 API_BASE_URL = "http://localhost:8000"  
 API_ENDPOINT = "/api/requests"
 
@@ -27,7 +35,7 @@ async def process_letter_and_send_to_api(letter_text: str):
             serialNumbers=extracted_data.get("Серийный номер", extracted_data.get("serial_number", "")),
             deviceType=extracted_data.get("Тип устройства", extracted_data.get("device_type", "")),
             emotion=extracted_data.get("Эмоция", extracted_data.get("emotion", "neutral")),
-            issue=extracted_data.get("Вопрос", extracted_data.get("question", ""))
+            issue=extracted_data.get("Вопрос", extracted_data.get("issue_summary", ""))
         )
     
     async with httpx.AsyncClient() as api_client:
@@ -53,7 +61,9 @@ async def process_letter_and_send_to_api(letter_text: str):
 
 
 if __name__ == "__main__":
-    
+    msgs = fetch_emails(1, "output")
+ #   print(msgs)
+    letter_text = msgs[0]['text']
     test_letter = """
     Дата: 28.02.2026
     От: Иванов Петр Сидорович
@@ -70,4 +80,4 @@ if __name__ == "__main__":
     С уважением, Петр.
     """
 
-    asyncio.run(process_letter_and_send_to_api(test_letter))
+    asyncio.run(process_letter_and_send_to_api(letter_text))
