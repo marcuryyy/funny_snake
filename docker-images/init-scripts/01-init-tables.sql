@@ -13,4 +13,5 @@ CREATE TABLE IF NOT EXISTS requests (
   question_summary  TEXT NOT NULL,
   llm_answer        TEXT NOT NULL,
   task_status       task_statuses DEFAULT 'OPEN'
+  message_id        TEXT NOT NULL
 );

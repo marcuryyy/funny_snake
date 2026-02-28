@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from datetime import date, datetime
@@ -7,8 +7,10 @@ import csv
 import io
 from typing import Optional, List, Union
 from mail_fetch import fetch_emails
+from mail_sending import send_email
 import asyncpg
-import asyncio
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment, PatternFill
 import os
 import uvicorn
 from pydantic_models import (
@@ -16,6 +18,7 @@ from pydantic_models import (
     RequestCreate,
     RequestResponse,
     FetchedMailsResponse,
+    EmailRequest
 )
 
 POSTGRES_DB_NAME = os.getenv("POSTGRES_DB", "postgres")
@@ -141,6 +144,7 @@ async def get_filtered_requests(
                     issue=row["question_summary"] or "",
                     llm_answer=row["llm_answer"] or "",
                     task_status=row["task_status"] or "OPEN"
+                    message_id=row["message_id"] or ""
                 )
             )
         return result
@@ -249,6 +253,28 @@ async def get_mails():
     msgs = fetch_emails(limit=10, save_attachments_dir="attachments")
     return msgs
 
+@app.post("/api/sendMail")
+async def send_mail_endpoint(
+    request: EmailRequest
+):    
+    success = await send_email(
+        to_emails=request.to_emails,
+        subject=request.subject,
+        body=request.body,
+        html_body=request.html_body,
+        from_email=request.from_email,
+        message_id=request.message_id,
+        reply_to_thread=True
+    )
+    
+    if success:
+        return {
+            "status": "success",
+            "message": f"Email отправлен на {len(request.to_emails)} адресов",
+            "recipients": request.to_emails,
+        }
+    else:
+        raise HTTPException(status_code=500, detail="Ошибка отправки email")
 
 @app.get("/api/getCsv")
 async def get_table_csv(
@@ -322,6 +348,95 @@ async def get_table_csv(
         },
     )
 
+@app.get("/api/getExcel")
+async def get_table_excel(
+    full_name: Optional[str] = Query(None),
+    object_name: Optional[str] = Query(None),
+    phone: Optional[str] = Query(None),
+    email: Optional[str] = Query(None),
+    emotion: Optional[str] = Query(None),
+    issue: Optional[str] = Query(None),
+    date_from: Optional[str] = Query(None),
+    date_to: Optional[str] = Query(None),
+):
+    """Экспорт отфильтрованных запросов в Excel"""
+    db_pool = app.state.db_pool
+    if not db_pool:
+        raise HTTPException(status_code=503, detail="DB not ready")
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Requests"
+
+    headers = list(RequestResponse.model_fields.keys())
+    
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+    
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal="center")
+
+    batch_size = 1000
+    offset = 0
+    row_num = 2
+
+    while True:
+        batch = await get_filtered_requests(
+            db_pool=db_pool,
+            full_name=full_name, object_name=object_name, phone=phone,
+            email=email, emotion=emotion, issue=issue,
+            date_from=date_from, date_to=date_to,
+            limit=batch_size, offset=offset,
+        )
+
+        if not batch:
+            break
+
+        for row in batch:
+            if hasattr(row, 'dict'):
+                row_dict = row.dict()
+            elif hasattr(row, '__dict__'):
+                row_dict = row.__dict__
+            else:
+                row_dict = dict(row)
+            
+            for col, header in enumerate(headers, 1):
+                value = row_dict.get(header, "")
+                ws.cell(row=row_num, column=col, value=str(value) if value is not None else "")
+            row_num += 1
+
+        offset += batch_size
+
+    for column in ws.columns:
+        max_length = 0
+        column_letter = column[0].column_letter
+        for cell in column:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+        adjusted_width = min(max_length + 2, 50)
+        ws.column_dimensions[column_letter].width = adjusted_width
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    file_content = output.getvalue()
+    output.close()
+
+    filename = f"requests_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+
+    return Response(
+        content=file_content,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+        },
+    )
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
