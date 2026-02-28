@@ -11,6 +11,7 @@ IMAP_SERVER = "imap.mail.ru"
 EMAIL_USER = os.getenv("IMAP_EMAIL", "")
 EMAIL_PASS = os.getenv("EXTERNAL_PASS", "")
 
+
 def decode_str(s):
     if not s:
         return ""
@@ -22,6 +23,7 @@ def decode_str(s):
         else:
             parts.append(text)
     return "".join(parts)
+
 
 def get_body(msg):
     if msg.is_multipart():
@@ -47,12 +49,10 @@ def get_body(msg):
                     )
                 )
             print(ctype)
-            
 
         if text_parts:
             return "\n".join(text_parts).strip()
         if html_parts:
-            # strip HTML tags
             soup = BeautifulSoup("\n".join(html_parts), "html.parser")
             return soup.get_text("\n").strip()
         return ""
@@ -61,7 +61,7 @@ def get_body(msg):
         payload = msg.get_payload(decode=True)
         if not payload:
             return ""
-            
+
         charset = msg.get_content_charset() or "utf-8"
         content = payload.decode(charset, errors="ignore").strip()
         ctype = msg.get_content_type()
@@ -73,6 +73,7 @@ def get_body(msg):
         else:
             return content
 
+
 def get_attachments(msg, save_dir=None):
     files = []
     for part in msg.walk():
@@ -83,6 +84,7 @@ def get_attachments(msg, save_dir=None):
             data = part.get_payload(decode=True)
             if save_dir and filename:
                 import os
+
                 path = os.path.join(save_dir, filename)
                 with open(path, "wb") as f:
                     f.write(data)
@@ -91,23 +93,24 @@ def get_attachments(msg, save_dir=None):
                 files.append({"filename": filename, "data": data})
     return files
 
+
 def fetch_emails(limit=None, save_attachments_dir=None):
     EMAIL_USER = os.getenv("IMAP_EMAIL", "enigma_hack@mail.ru")
     EMAIL_PASS = os.getenv("EXTERNAL_PASS", "rgPRLpzseUkkV9zSvsbj")
     mail = imaplib.IMAP4_SSL(IMAP_SERVER)
-   # print(EMAIL_PASS, EMAIL_USER)
+
     mail.login(EMAIL_USER, EMAIL_PASS)
     print("success")
     mail.select("INBOX")
 
-    status, data = mail.search(None, "UNSEEN") # only new messages
+    status, data = mail.search(None, "UNSEEN")
     if status != "OK":
         mail.logout()
         return []
 
     ids = data[0].split()
     if limit:
-        ids = ids[-limit:]  # last N emails
+        ids = ids[-limit:]
 
     emails = []
     for msg_id in ids:
@@ -127,13 +130,14 @@ def fetch_emails(limit=None, save_attachments_dir=None):
             {
                 "subject": subject,
                 "text": body,
-                "files": attachments,  # list of file paths or dicts
+                "files": attachments,
             }
         )
 
     mail.close()
     mail.logout()
     return emails
+
 
 if __name__ == "__main__":
     msgs = fetch_emails(limit=10, save_attachments_dir="attachments")
