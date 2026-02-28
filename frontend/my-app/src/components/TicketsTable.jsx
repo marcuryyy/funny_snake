@@ -56,7 +56,7 @@ function TicketsTable({ onTicketSelect }) {
       t.phone,
       t.email,
       t.deviceType,
-      t.serialNumbers,
+      t.factoryNumber,
       t.emotion,
       t.issue,
       t.date,

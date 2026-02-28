@@ -60,7 +60,7 @@ function TicketDetail({ ticket, onClose }) {
           </div>
           <div className="info-item">
             <label>Серийный номер:</label>
-            <span>{ticket.serialNumbers || '—'}</span>
+            <span>{ticket.factoryNumber || '—'}</span>
           </div>
           <div className="info-item">
             <label>Эмоция:</label>
