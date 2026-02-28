@@ -17,11 +17,13 @@ API_BASE_URL = "http://localhost:8000"
 API_ENDPOINT = "/api/requests"
 
 
-async def process_letter_and_send_to_api(letter_text: str):
+async def process_letter(letter_text: str):
 
     llm = LLMPipeline()
 
     extracted_data = await llm.extract_data(letter_text)
+
+    llm_answer = await llm.ask_rag(letter_text)
 
     if not extracted_data:
         return
@@ -68,4 +70,4 @@ if __name__ == "__main__":
     for msg in msgs:
         letter_text = msg["text"]
 
-        asyncio.run(process_letter_and_send_to_api(letter_text))
+        asyncio.run(process_letter(letter_text))

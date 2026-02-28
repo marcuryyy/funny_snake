@@ -133,7 +133,7 @@ class LLMPipeline:
             "temperature": 0.3,
         }
         url = f"{self.base_url}/chat/completions"
-        async with httpx.AsyncClient(timeout=httpx.Timeout(120.0)) as client:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(self.timeout)) as client:
             try:
                 resp = await client.post(
                     url,
