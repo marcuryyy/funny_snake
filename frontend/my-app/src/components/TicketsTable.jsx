@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import AddTicketModal from './AddTicketModal';
 import './TicketsTable.css';
 
 const API_URL = 'http://localhost:8000/api/requests';
 const CSV_URL = 'http://localhost:8000/api/getCsv';
+const EXCEL_URL = 'http://localhost:8000/api/getExcel';
 
 const EMOTION_FILTERS = [
   { value: '', label: 'Все эмоции' },
@@ -26,6 +27,8 @@ function TicketsTable({ onTicketSelect }) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [availableDevices, setAvailableDevices] = useState([]);
   const [viewMode, setViewMode] = useState('table');
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const exportButtonRef = useRef(null);
 
   const fetchTickets = useCallback(async () => {
     try {
@@ -91,17 +94,49 @@ function TicketsTable({ onTicketSelect }) {
     fetchTickets();
   };
 
-  const exportToCSV = () => {
+  const getExportParams = () => {
     const params = new URLSearchParams();
     if (searchTerm) params.set('full_name', searchTerm);
     if (filterEmotion) params.set('emotion', filterEmotion);
     if (filterDevice) params.set('device_type', filterDevice);
     if (dateFrom) params.set('date_from', dateFrom);
     if (dateTo) params.set('date_to', dateTo);
-
-    const url = `${CSV_URL}?${params.toString()}`;
-    window.open(url, '_blank');
+    return params.toString();
   };
+
+  const exportToCSV = () => {
+    const params = getExportParams();
+    const url = `${CSV_URL}?${params}`;
+    window.open(url, '_blank');
+    setShowExportMenu(false);
+  };
+
+  const exportToExcel = () => {
+    const params = getExportParams();
+    const url = `${EXCEL_URL}?${params}`;
+    window.open(url, '_blank');
+    setShowExportMenu(false);
+  };
+
+  const toggleExportMenu = () => {
+    setShowExportMenu(!showExportMenu);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (exportButtonRef.current && !exportButtonRef.current.contains(event.target)) {
+        setShowExportMenu(false);
+      }
+    };
+
+    if (showExportMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showExportMenu]);
 
   if (loading) {
     return <div className="loading">Загрузка обращений...</div>;
@@ -146,9 +181,21 @@ function TicketsTable({ onTicketSelect }) {
           <button className="btn-refresh" onClick={fetchTickets}>
             Обновить
           </button>
-          <button className="btn-export" onClick={exportToCSV}>
-            Выгрузить CSV
-          </button>
+          <div className="export-dropdown" ref={exportButtonRef}>
+            <button className="btn-export" onClick={toggleExportMenu}>
+              Экспорт
+            </button>
+            {showExportMenu && (
+              <div className="export-menu">
+                <button className="export-menu-item" onClick={exportToCSV}>
+                  CSV
+                </button>
+                <button className="export-menu-item" onClick={exportToExcel}>
+                  Excel
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
