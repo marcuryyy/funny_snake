@@ -126,6 +126,7 @@ async def get_filtered_requests(
 
         result = []
         for row in rows:
+            print(row["llm_answer"])
             result.append(
                 RequestResponse(
                     id=row["request_id"],
@@ -138,7 +139,8 @@ async def get_filtered_requests(
                     deviceType=row["device_type"] or "",
                     emotion=row["emotion"],
                     issue=row["question_summary"] or "",
-                    llm_answer=row["llm_answer"] or ""
+                    llm_answer=row["llm_answer"] or "",
+                    task_status=row["task_status"] or "OPEN"
                 )
             )
         return result

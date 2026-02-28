@@ -22,9 +22,9 @@ async def process_letter(letter_text: str):
     llm = LLMPipeline()
 
     extracted_data = await llm.extract_data(letter_text)
-
+    print(letter_text)
     llm_answer = await llm.ask_rag(letter_text)
-    print(llm_answer)
+    print("ASDSAD", llm_answer)
     if not extracted_data:
         return
 
