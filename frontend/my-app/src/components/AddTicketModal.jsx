@@ -4,12 +4,9 @@ import './AddTicketModal.css';
 const API_URL = 'http://localhost:8000/api/requests';
 
 const EMOTION_OPTIONS = [
-  { value: 'гнев', label: 'Гнев' },
-  { value: 'раздражение', label: 'Раздражение' },
-  { value: 'тревога', label: 'Тревога' },
-  { value: 'разочарование', label: 'Разочарование' },
-  { value: 'удивление', label: 'Удивление' },
-  { value: 'спокойствие', label: 'Спокойствие' },
+  { value: 'нейтральное', label: 'Нейтральное' },
+  { value: 'негативное', label: 'Негативное' },
+  { value: 'позитивное', label: 'Позитивное' },
 ];
 
 function AddTicketModal({ onClose, onAddSuccess }) {
@@ -21,7 +18,7 @@ function AddTicketModal({ onClose, onAddSuccess }) {
     email: '',
     factoryNumber: '',
     deviceType: '',
-    emotion: 'спокойствие',
+    emotion: 'нейтральное',
     issue: '',
   });
   const [submitting, setSubmitting] = useState(false);

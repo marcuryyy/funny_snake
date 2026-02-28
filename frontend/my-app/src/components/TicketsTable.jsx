@@ -5,11 +5,12 @@ import './TicketsTable.css';
 const API_URL = 'http://localhost:8000/api/requests';
 const CSV_URL = 'http://localhost:8000/api/getCsv';
 
-const STATUS_LABELS = {
-  new: { label: 'Новый', color: 'status-new' },
-  in_progress: { label: 'В работе', color: 'status-progress' },
-  closed: { label: 'Закрыт', color: 'status-closed' },
-};
+const EMOTION_FILTERS = [
+  { value: '', label: 'Все эмоции' },
+  { value: 'нейтральное', label: 'Нейтральное' },
+  { value: 'негативное', label: 'Негативное' },
+  { value: 'позитивное', label: 'Позитивное' },
+];
 
 function TicketsTable({ onTicketSelect }) {
   const [tickets, setTickets] = useState([]);
@@ -23,7 +24,6 @@ function TicketsTable({ onTicketSelect }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [availableEmotions, setAvailableEmotions] = useState([]);
   const [availableDevices, setAvailableDevices] = useState([]);
   const [viewMode, setViewMode] = useState('table');
 
@@ -71,7 +71,6 @@ function TicketsTable({ onTicketSelect }) {
       const response = await fetch(`${API_URL}?page=1&limit=1000`);
       if (response.ok) {
         const data = await response.json();
-        setAvailableEmotions([...new Set(data.map((t) => t.emotion))]);
         setAvailableDevices([...new Set(data.map((t) => t.deviceType))]);
       }
     } catch (err) {
@@ -171,10 +170,9 @@ function TicketsTable({ onTicketSelect }) {
             setPage(1);
           }}
         >
-          <option value="">Все эмоции</option>
-          {availableEmotions.map((emotion) => (
-            <option key={emotion} value={emotion}>
-              {emotion}
+          {EMOTION_FILTERS.map((emotion) => (
+            <option key={emotion.value} value={emotion.value}>
+              {emotion.label}
             </option>
           ))}
         </select>
@@ -221,79 +219,62 @@ function TicketsTable({ onTicketSelect }) {
               <tr>
                 <th>ID</th>
                 <th>Дата</th>
-                <th>Статус</th>
                 <th>ФИО</th>
                 <th>Объект</th>
                 <th>Телефон</th>
                 <th>Email</th>
                 <th>Устройство</th>
-                <th>Серийный номер</th>
+                <th>Заводской номер</th>
                 <th>Эмоция</th>
                 <th>Проблема</th>
               </tr>
             </thead>
             <tbody>
-              {tickets.map((ticket) => {
-                const status = ticket.status || 'new';
-                const statusInfo = STATUS_LABELS[status] || STATUS_LABELS.new;
-                return (
-                  <tr
-                    key={ticket.id}
-                    onClick={() => onTicketSelect && onTicketSelect(ticket)}
-                    className="table-row-clickable"
-                  >
-                    <td className="id-cell">#{ticket.id}</td>
-                    <td className="date-cell">{ticket.date}</td>
-                    <td>
-                      <span className={`status-badge ${statusInfo.color}`}>
-                        {statusInfo.label}
-                      </span>
-                    </td>
-                    <td className="name-cell">{ticket.fullName}</td>
-                    <td>{ticket.object}</td>
-                    <td>{ticket.phone || '—'}</td>
-                    <td>{ticket.email || '—'}</td>
-                    <td>{ticket.deviceType}</td>
-                    <td>{ticket.factoryNumber || '—'}</td>
-                    <td>
-                      <span className="emotion-badge">{ticket.emotion}</span>
-                    </td>
-                    <td className="issue-cell" title={ticket.issue}>
-                      {ticket.issue}
-                    </td>
-                  </tr>
-                );
-              })}
+              {tickets.map((ticket) => (
+                <tr
+                  key={ticket.id}
+                  onClick={() => onTicketSelect && onTicketSelect(ticket)}
+                  className="table-row-clickable"
+                >
+                  <td className="id-cell">#{ticket.id}</td>
+                  <td className="date-cell">{ticket.date}</td>
+                  <td className="name-cell">{ticket.fullName}</td>
+                  <td>{ticket.object}</td>
+                  <td>{ticket.phone || '—'}</td>
+                  <td>{ticket.email || '—'}</td>
+                  <td>{ticket.deviceType}</td>
+                  <td>{ticket.factoryNumber || '—'}</td>
+                  <td>
+                    <span className="emotion-badge">{ticket.emotion}</span>
+                  </td>
+                  <td className="issue-cell" title={ticket.issue}>
+                    {ticket.issue}
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
       ) : (
         <div className="tickets-grid">
-          {tickets.map((ticket) => {
-            const status = ticket.status || 'new';
-            const statusInfo = STATUS_LABELS[status] || STATUS_LABELS.new;
-            return (
-              <div
-                key={ticket.id}
-                className="ticket-card"
-                onClick={() => onTicketSelect && onTicketSelect(ticket)}
-              >
-                <div className="ticket-header">
-                  <span className={`status-badge ${statusInfo.color}`}>
-                    {statusInfo.label}
-                  </span>
-                  <span className="emotion-badge">{ticket.emotion}</span>
-                </div>
-                <h3 className="ticket-issue">{ticket.issue}</h3>
-                <p className="ticket-name">{ticket.fullName}</p>
-                <p className="ticket-object">{ticket.object}</p>
-                <div className="ticket-footer">
-                  {ticket.phone && <span className="ticket-phone">{ticket.phone}</span>}
-                  <span className="ticket-date">{ticket.date}</span>
-                </div>
+          {tickets.map((ticket) => (
+            <div
+              key={ticket.id}
+              className="ticket-card"
+              onClick={() => onTicketSelect && onTicketSelect(ticket)}
+            >
+              <div className="ticket-header">
+                <span className="emotion-badge">{ticket.emotion}</span>
               </div>
-            );
-          })}
+              <h3 className="ticket-issue">{ticket.issue}</h3>
+              <p className="ticket-name">{ticket.fullName}</p>
+              <p className="ticket-object">{ticket.object}</p>
+              <div className="ticket-footer">
+                {ticket.phone && <span className="ticket-phone">{ticket.phone}</span>}
+                <span className="ticket-date">{ticket.date}</span>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 

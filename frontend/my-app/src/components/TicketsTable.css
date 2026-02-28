@@ -1,6 +1,6 @@
 .tickets-table-container {
-  padding: 24px;
-  max-width: 1600px;
+  padding: 16px;
+  max-width: 100%;
   margin: 0 auto;
 }
 
@@ -8,18 +8,18 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .tickets-header h2 {
   margin: 0;
-  font-size: 20px;
+  font-size: 18px;
   color: #1a1a2e;
 }
 
 .header-actions {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
 }
 
@@ -33,7 +33,7 @@
 .toggle-btn {
   background: white;
   border: none;
-  padding: 8px 16px;
+  padding: 6px 12px;
   font-size: 13px;
   cursor: pointer;
   transition: all 0.2s;
@@ -57,10 +57,10 @@
   background: #333;
   color: white;
   border: none;
-  padding: 10px 18px;
+  padding: 8px 14px;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   transition: background 0.2s;
 }
@@ -73,9 +73,9 @@
   background: #f0f0f0;
   color: #333;
   border: none;
-  padding: 10px 18px;
+  padding: 8px 14px;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   transition: background 0.2s;
@@ -89,10 +89,10 @@
   background: #fff;
   color: #333;
   border: 1px solid #e0e0e0;
-  padding: 10px 18px;
+  padding: 8px 14px;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   transition: all 0.2s;
 }
@@ -103,18 +103,18 @@
 
 .filters {
   display: flex;
-  gap: 12px;
-  margin-bottom: 24px;
+  gap: 8px;
+  margin-bottom: 16px;
   flex-wrap: wrap;
 }
 
 .search-input {
   flex: 1;
-  min-width: 200px;
-  padding: 10px 14px;
+  min-width: 150px;
+  padding: 8px 12px;
   border: 1px solid #e0e0e0;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 13px;
   transition: border-color 0.2s;
 }
 
@@ -124,13 +124,14 @@
 }
 
 .filters select {
-  padding: 10px 14px;
+  padding: 8px 12px;
   border: 1px solid #e0e0e0;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 13px;
   background: white;
   cursor: pointer;
   transition: border-color 0.2s;
+  min-width: 130px;
 }
 
 .filters select:focus {
@@ -139,11 +140,12 @@
 }
 
 .date-input {
-  padding: 10px 14px;
+  padding: 8px 12px;
   border: 1px solid #e0e0e0;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 13px;
   transition: border-color 0.2s;
+  min-width: 130px;
 }
 
 .date-input:focus {
@@ -156,13 +158,15 @@
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   overflow: hidden;
-  margin-bottom: 24px;
+  overflow-x: auto;
+  margin-bottom: 16px;
 }
 
 .tickets-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: 12px;
+  min-width: 900px;
 }
 
 .tickets-table thead {
@@ -172,17 +176,17 @@
 
 .tickets-table th {
   text-align: left;
-  padding: 12px 16px;
+  padding: 10px 12px;
   font-weight: 600;
   color: #666;
   text-transform: uppercase;
-  font-size: 11px;
+  font-size: 10px;
   letter-spacing: 0.05em;
   white-space: nowrap;
 }
 
 .tickets-table td {
-  padding: 12px 16px;
+  padding: 10px 12px;
   border-bottom: 1px solid #e0e0e0;
   color: #333;
 }
@@ -204,34 +208,10 @@
   background: #f0f0f0;
 }
 
-.status-badge {
-  padding: 4px 10px;
+.emotion-badge {
+  padding: 3px 8px;
   border-radius: 4px;
   font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.status-badge.status-new {
-  background: #e3f2fd;
-  color: #1976d2;
-}
-
-.status-badge.status-progress {
-  background: #fff3e0;
-  color: #f57c00;
-}
-
-.status-badge.status-closed {
-  background: #e8f5e9;
-  color: #388e3c;
-}
-
-.emotion-badge {
-  padding: 4px 10px;
-  border-radius: 4px;
-  font-size: 12px;
   background: #f5f5f5;
   display: inline-flex;
   align-items: center;
@@ -242,15 +222,17 @@
 .id-cell {
   font-weight: 600;
   color: #666;
+  width: 50px;
 }
 
 .name-cell {
   font-weight: 500;
   color: #1a1a2e;
+  white-space: nowrap;
 }
 
 .issue-cell {
-  max-width: 250px;
+  max-width: 200px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -261,19 +243,20 @@
   color: #666;
   font-family: monospace;
   white-space: nowrap;
+  width: 90px;
 }
 
 .tickets-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 16px;
-  margin-bottom: 24px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
 .ticket-card {
   background: white;
   border-radius: 8px;
-  padding: 16px;
+  padding: 14px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
@@ -289,28 +272,28 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   flex-wrap: wrap;
   gap: 8px;
 }
 
 .ticket-card .ticket-issue {
-  margin: 0 0 12px 0;
-  font-size: 14px;
+  margin: 0 0 10px 0;
+  font-size: 13px;
   font-weight: 600;
   color: #1a1a2e;
   line-height: 1.4;
 }
 
 .ticket-card .ticket-name {
-  margin: 0 0 8px 0;
-  font-size: 13px;
+  margin: 0 0 6px 0;
+  font-size: 12px;
   color: #666;
 }
 
 .ticket-card .ticket-object {
-  margin: 0 0 12px 0;
-  font-size: 13px;
+  margin: 0 0 10px 0;
+  font-size: 12px;
   color: #666;
 }
 
@@ -318,61 +301,61 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 12px;
+  padding-top: 10px;
   border-top: 1px solid #f0f0f0;
   flex-wrap: wrap;
   gap: 8px;
 }
 
 .ticket-card .ticket-phone {
-  font-size: 12px;
+  font-size: 11px;
   color: #333;
 }
 
 .ticket-card .ticket-date {
-  font-size: 11px;
+  font-size: 10px;
   color: #999;
 }
 
 .no-results {
   text-align: center;
-  padding: 48px;
+  padding: 40px;
   color: #666;
   font-size: 14px;
 }
 
 .loading {
-  padding: 48px;
+  padding: 40px;
   text-align: center;
   font-size: 14px;
   color: #666;
 }
 
 .error-container {
-  padding: 48px;
+  padding: 40px;
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 400px;
+  min-height: 300px;
 }
 
 .error-message {
   background: #ffebee;
   border: 1px solid #ef5350;
   border-radius: 8px;
-  padding: 24px;
+  padding: 20px;
   text-align: center;
-  max-width: 400px;
+  max-width: 350px;
 }
 
 .error-message h3 {
-  margin: 0 0 12px 0;
+  margin: 0 0 10px 0;
   color: #c62828;
-  font-size: 16px;
+  font-size: 15px;
 }
 
 .error-message p {
-  margin: 0 0 16px 0;
+  margin: 0 0 14px 0;
   color: #666;
   font-size: 13px;
 }
@@ -381,9 +364,9 @@
   background: #333;
   color: white;
   border: none;
-  padding: 10px 20px;
+  padding: 8px 16px;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   transition: background 0.2s;
@@ -398,16 +381,16 @@
   justify-content: center;
   align-items: center;
   gap: 16px;
-  padding-top: 24px;
+  padding-top: 16px;
   border-top: 1px solid #e0e0e0;
 }
 
 .btn-page {
   background: white;
   border: 1px solid #e0e0e0;
-  padding: 8px 16px;
+  padding: 6px 14px;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 13px;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -422,6 +405,6 @@
 }
 
 .page-info {
-  font-size: 14px;
+  font-size: 13px;
   color: #666;
 }
