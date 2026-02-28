@@ -6,6 +6,7 @@ from typing import Optional, List, Union, Dict
 class FetchedMailsResponse(BaseModel):
     subject: str
     text: str
+    message_id: str
     files: Optional[Union[List[str], List[Dict]]]
 
 class EmailRequest(BaseModel):
@@ -14,6 +15,7 @@ class EmailRequest(BaseModel):
     body: str = Field(..., min_length=1, max_length=5000)
     html_body: Optional[str] = Field(None, max_length=10000)
     from_email: Optional[str] = Field(None)
+    message_id: Optional[str]
 
 class RequestBase(BaseModel):
     date: str
@@ -25,6 +27,8 @@ class RequestBase(BaseModel):
     deviceType: Optional[str] = ""
     emotion: str
     issue: str
+    llm_answer: str
+    message_id: str
 
 
 class RequestCreate(RequestBase):
@@ -33,6 +37,7 @@ class RequestCreate(RequestBase):
 
 class RequestResponse(RequestBase):
     id: int
+    task_status: str
 
 
 class AddNewRow(BaseModel):

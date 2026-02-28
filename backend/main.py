@@ -129,6 +129,7 @@ async def get_filtered_requests(
 
         result = []
         for row in rows:
+            print(row["llm_answer"])
             result.append(
                 RequestResponse(
                     id=row["request_id"],
@@ -141,6 +142,9 @@ async def get_filtered_requests(
                     deviceType=row["device_type"] or "",
                     emotion=row["emotion"],
                     issue=row["question_summary"] or "",
+                    llm_answer=row["llm_answer"] or "",
+                    task_status=row["task_status"] or "OPEN",
+                    message_id=row["message_id"] or ""
                 )
             )
         return result
@@ -223,9 +227,9 @@ async def create_request(request_data: RequestCreate):
     async with db_pool.acquire() as conn:
         query = """
             INSERT INTO requests 
-            (req_date, full_name, object_name, phone, email, factory_number, device_type, emotion, question_summary)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-            RETURNING request_id, req_date, full_name, object_name, phone, email, factory_number, device_type, emotion, question_summary
+            (req_date, full_name, object_name, phone, email, factory_number, device_type, emotion, question_summary, llm_answer)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            RETURNING request_id, req_date, full_name, object_name, phone, email, factory_number, device_type, emotion, question_summary, llm_answer
         """
         row = await conn.fetchrow(
             query,
@@ -238,6 +242,7 @@ async def create_request(request_data: RequestCreate):
             request_data.deviceType,
             request_data.emotion,
             request_data.issue,
+            request_data.llm_answer
         )
 
         return AddNewRow(id=row["request_id"])
@@ -257,7 +262,9 @@ async def send_mail_endpoint(
         subject=request.subject,
         body=request.body,
         html_body=request.html_body,
-        from_email=request.from_email
+        from_email=request.from_email,
+        message_id=request.message_id,
+        reply_to_thread=True
     )
     
     if success:

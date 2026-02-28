@@ -3,3 +3,5 @@
 attachments
 backend/__pycache__
 backend/output
+backend/instructions_pdf
+backend/chroma_db

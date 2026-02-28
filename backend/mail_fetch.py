@@ -95,15 +95,12 @@ def get_attachments(msg, save_dir=None):
 
 
 def fetch_emails(limit=None, save_attachments_dir=None):
-    EMAIL_USER = os.getenv("IMAP_EMAIL", "enigma_hack@mail.ru")
-    EMAIL_PASS = os.getenv("EXTERNAL_PASS", "rgPRLpzseUkkV9zSvsbj")
     mail = imaplib.IMAP4_SSL(IMAP_SERVER)
-
     mail.login(EMAIL_USER, EMAIL_PASS)
     print("success")
     mail.select("INBOX")
 
-    status, data = mail.search(None, "UNSEEN")
+    status, data = mail.search(None, "ALL")
     if status != "OK":
         mail.logout()
         return []
@@ -123,13 +120,15 @@ def fetch_emails(limit=None, save_attachments_dir=None):
 
         subject = decode_str(msg.get("Subject"))
         body = get_body(msg)
+        message_id = decode_str(msg.get("Message-ID", ""))
         os.makedirs(save_attachments_dir, exist_ok=True)
         attachments = get_attachments(msg, save_dir=save_attachments_dir)
-
+        print(subject, message_id)
         emails.append(
             {
                 "subject": subject,
                 "text": body,
+                "message_id": message_id,
                 "files": attachments,
             }
         )
