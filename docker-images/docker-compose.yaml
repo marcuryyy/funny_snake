@@ -27,6 +27,7 @@ services:
       POSTGRES_PORT: ${POSTGRES_PORT}
       IMAP_EMAIL: ${IMAP_EMAIL}
       EXTERNAL_PASS: ${EXTERNAL_PASS}
+      HF_TOKEN: ${HF_TOKEN}
 
     ports:
       - "8000:8000"
