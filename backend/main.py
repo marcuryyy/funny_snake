@@ -220,9 +220,9 @@ async def create_request(request_data: RequestCreate):
     async with db_pool.acquire() as conn:
         query = """
             INSERT INTO requests 
-            (req_date, full_name, object_name, phone, email, serial_numbers, device_type, emotion, question_summary)
+            (req_date, full_name, object_name, phone, email, factory_number, device_type, emotion, question_summary)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-            RETURNING request_id, req_date, full_name, object_name, phone, email, serial_numbers, device_type, emotion, question_summary
+            RETURNING request_id, req_date, full_name, object_name, phone, email, factory_number, device_type, emotion, question_summary
         """
         row = await conn.fetchrow(
             query,

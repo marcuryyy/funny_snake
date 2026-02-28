@@ -62,23 +62,10 @@ async def process_letter_and_send_to_api(letter_text: str):
 
 
 if __name__ == "__main__":
-    msgs = fetch_emails(1, "output")
+    msgs = fetch_emails(10, "output")
     #   print(msgs)
-    letter_text = msgs[0]["text"]
-    test_letter = """
-    Дата: 28.02.2026
-    От: Иванов Петр Сидорович
-    Организация: ООО "СеверСталь"
-    Телефон: +7 (999) 123-45-67
-    Email: p.ivanov@severstal.com
     
-    Добрый день!
-    
-    У нас проблема с устройством типа ДГС-200 (серийный номер SN-998877). 
-    Оно перегревается и гудит. Требуется срочная консультация.
-    Эмоциональное состояние: тревога.
-    
-    С уважением, Петр.
-    """
+    for msg in msgs:
+        letter_text = msg["text"]
 
-    asyncio.run(process_letter_and_send_to_api(letter_text))
+        asyncio.run(process_letter_and_send_to_api(letter_text))
