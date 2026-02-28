@@ -38,6 +38,7 @@ async def process_letter(letter_text: str):
         deviceType=extracted_data.get("device_type", ""),
         emotion=extracted_data.get("emotional_tone", ""),
         issue=extracted_data.get("issue_summary"),
+        llm_answer=llm_answer
     )
 
     async with httpx.AsyncClient() as api_client:
