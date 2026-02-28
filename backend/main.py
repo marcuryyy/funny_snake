@@ -138,6 +138,7 @@ async def get_filtered_requests(
                     deviceType=row["device_type"] or "",
                     emotion=row["emotion"],
                     issue=row["question_summary"] or "",
+                    llm_answer=row["llm_answer"] or ""
                 )
             )
         return result
