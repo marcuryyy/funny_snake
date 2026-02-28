@@ -2,11 +2,14 @@ from contextlib import asynccontextmanager
 import datetime
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from datetime import date
 from typing import Optional, List, Union
+from mail_fetch import fetch_emails
 import asyncpg
 import os
 import uvicorn
-from pydantic_models import AddNewRow, RequestCreate, RequestResponse 
+from pydantic_models import AddNewRow, RequestCreate, RequestResponse, FetchedMailsResponse
 
 POSTGRES_DB_NAME = os.getenv("POSTGRES_DB", "postgres")
 POSTGRES_DB_USER = os.getenv("POSTGRES_USER", "postgres")
@@ -150,6 +153,12 @@ async def create_request(request_data: RequestCreate):
         return AddNewRow(
             id=row['request_id']
         )
+    
+@app.get("/api/fetchMails", response_model=List[FetchedMailsResponse])
+async def get_mails():
+    msgs = fetch_emails(limit=10, save_attachments_dir="attachments")
+    return msgs
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
