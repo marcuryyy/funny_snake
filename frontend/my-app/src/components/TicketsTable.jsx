@@ -13,12 +13,19 @@ const EMOTION_FILTERS = [
   { value: 'позитивное', label: 'Позитивное' },
 ];
 
+const STATUS_FILTERS = [
+  { value: '', label: 'Все статусы' },
+  { value: 'OPEN', label: 'Открыто' },
+  { value: 'CLOSED', label: 'Закрыто' },
+];
+
 function TicketsTable({ onTicketSelect }) {
   const [tickets, setTickets] = useState([]);
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [filterEmotion, setFilterEmotion] = useState('');
   const [filterDevice, setFilterDevice] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
@@ -54,6 +61,9 @@ function TicketsTable({ onTicketSelect }) {
       if (dateTo) {
         params.set('date_to', dateTo);
       }
+      if (filterStatus) {
+        params.set('task_status', filterStatus);
+      }
 
       const response = await fetch(`${API_URL}?${params.toString()}`);
       if (!response.ok) {
@@ -67,7 +77,7 @@ function TicketsTable({ onTicketSelect }) {
     } finally {
       setLoading(false);
     }
-  }, [page, limit, filterEmotion, filterDevice, searchTerm, dateFrom, dateTo]);
+  }, [page, limit, filterEmotion, filterDevice, searchTerm, dateFrom, dateTo, filterStatus]);
 
   const fetchFilters = useCallback(async () => {
     try {
@@ -101,6 +111,7 @@ function TicketsTable({ onTicketSelect }) {
     if (filterDevice) params.set('device_type', filterDevice);
     if (dateFrom) params.set('date_from', dateFrom);
     if (dateTo) params.set('date_to', dateTo);
+    if (filterStatus) params.set('task_status', filterStatus);
     return params.toString();
   };
 
@@ -224,6 +235,19 @@ function TicketsTable({ onTicketSelect }) {
           ))}
         </select>
         <select
+          value={filterStatus}
+          onChange={(e) => {
+            setFilterStatus(e.target.value);
+            setPage(1);
+          }}
+        >
+          {STATUS_FILTERS.map((status) => (
+            <option key={status.value} value={status.value}>
+              {status.label}
+            </option>
+          ))}
+        </select>
+        <select
           value={filterDevice}
           onChange={(e) => {
             setFilterDevice(e.target.value);
@@ -273,6 +297,7 @@ function TicketsTable({ onTicketSelect }) {
                 <th>Устройство</th>
                 <th>Заводской номер</th>
                 <th>Эмоция</th>
+                <th>Статус</th>
                 <th>Проблема</th>
               </tr>
             </thead>
@@ -294,6 +319,11 @@ function TicketsTable({ onTicketSelect }) {
                   <td>
                     <span className="emotion-badge">{ticket.emotion}</span>
                   </td>
+                  <td>
+                    <span className={`status-badge status-${ticket.task_status?.toLowerCase() || 'open'}`}>
+                      {ticket.task_status === 'CLOSED' ? 'Закрыто' : 'Открыто'}
+                    </span>
+                  </td>
                   <td className="issue-cell" title={ticket.issue}>
                     {ticket.issue}
                   </td>
@@ -312,6 +342,9 @@ function TicketsTable({ onTicketSelect }) {
             >
               <div className="ticket-header">
                 <span className="emotion-badge">{ticket.emotion}</span>
+                <span className={`status-badge status-${ticket.task_status?.toLowerCase() || 'open'}`}>
+                  {ticket.task_status === 'CLOSED' ? 'Закрыто' : 'Открыто'}
+                </span>
               </div>
               <h3 className="ticket-issue">{ticket.issue}</h3>
               <p className="ticket-name">{ticket.fullName}</p>

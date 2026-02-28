@@ -8,11 +8,13 @@ function TicketDetail({ ticket, onClose }) {
   const [body, setBody] = useState('');
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [taskStatus, setTaskStatus] = useState(ticket.task_status || 'OPEN');
 
   useEffect(() => {
     const defaultSubject = `Ответ на обращение: ${ticket.issue.substring(0, 50)}${ticket.issue.length > 50 ? '...' : ''}`;
     setSubject(defaultSubject);
-    setBody(ticket.letterText || '');
+    setBody(ticket.llm_answer || '');
+    setTaskStatus(ticket.task_status || 'OPEN');
     setLoading(false);
   }, [ticket]);
 
@@ -32,16 +34,22 @@ function TicketDetail({ ticket, onClose }) {
 
     setSending(true);
     try {
+      const requestBody = {
+        to_emails: [ticket.email],
+        subject,
+        body,
+      };
+      
+      if (ticket.message_id) {
+        requestBody.message_id = ticket.message_id;
+      }
+
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          to_emails: [ticket.email],
-          subject,
-          body,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -105,6 +113,17 @@ function TicketDetail({ ticket, onClose }) {
           <div className="info-item">
             <label>Эмоция:</label>
             <span className="emotion-badge-detail">{ticket.emotion}</span>
+          </div>
+          <div className="info-item">
+            <label>Статус:</label>
+            <select
+              value={taskStatus}
+              onChange={(e) => setTaskStatus(e.target.value)}
+              className="status-select"
+            >
+              <option value="OPEN">Открыто</option>
+              <option value="CLOSED">Закрыто</option>
+            </select>
           </div>
           <div className="info-item">
             <label>Дата:</label>
