@@ -1,8 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
-import TicketCard from './TicketCard';
+import NewRequestModal from './NewRequestModal';
 import './TicketsTable.css';
 
 const API_URL = 'http://localhost:8000/api/requests';
+
+const emotionIcons = {
+  гнев: '😠',
+  раздражение: '😤',
+  тревога: '😰',
+  разочарование: '😞',
+  удивление: '😮',
+  спокойствие: '😌',
+};
 
 function TicketsTable({ onTicketSelect }) {
   const [tickets, setTickets] = useState([]);
@@ -11,6 +20,7 @@ function TicketsTable({ onTicketSelect }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isNewRequestModalOpen, setIsNewRequestModalOpen] = useState(false);
 
   const fetchTickets = useCallback(async () => {
     try {
@@ -70,6 +80,11 @@ function TicketsTable({ onTicketSelect }) {
     link.click();
   };
 
+  const handleNewRequestSuccess = () => {
+    fetchTickets();
+    setIsNewRequestModalOpen(false);
+  };
+
   if (loading) {
     return <div className="loading">Загрузка обращений...</div>;
   }
@@ -93,6 +108,9 @@ function TicketsTable({ onTicketSelect }) {
       <div className="tickets-header">
         <h2>Обращения</h2>
         <div className="header-actions">
+          <button className="btn-new" onClick={() => setIsNewRequestModalOpen(true)}>
+            + Новое обращение
+          </button>
           <button className="btn-refresh" onClick={fetchTickets}>
             🔄 Обновить
           </button>
@@ -128,14 +146,54 @@ function TicketsTable({ onTicketSelect }) {
         </select>
       </div>
 
-      <div className="tickets-grid">
-        {filteredTickets.map((ticket) => (
-          <TicketCard key={ticket.id} ticket={ticket} onSelect={onTicketSelect} />
-        ))}
+      <div className="tickets-table-wrapper">
+        <table className="tickets-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Дата</th>
+              <th>ФИО</th>
+              <th>Объект</th>
+              <th>Телефон</th>
+              <th>Email</th>
+              <th>Устройство</th>
+              <th>Серийный номер</th>
+              <th>Эмоция</th>
+              <th>Проблема</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredTickets.map((ticket) => (
+              <tr key={ticket.id} onClick={() => onTicketSelect && onTicketSelect(ticket)}>
+                <td className="id-cell">#{ticket.id}</td>
+                <td className="date-cell">{ticket.date}</td>
+                <td className="name-cell">{ticket.fullName}</td>
+                <td>{ticket.object}</td>
+                <td>{ticket.phone || '—'}</td>
+                <td>{ticket.email || '—'}</td>
+                <td className="device-type-cell">{ticket.deviceType}</td>
+                <td>{ticket.serialNumbers || '—'}</td>
+                <td className="emotion-cell">
+                  <span className="emotion-badge">
+                    {emotionIcons[ticket.emotion] || '😐'} {ticket.emotion}
+                  </span>
+                </td>
+                <td className="issue-cell" title={ticket.issue}>{ticket.issue}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       {filteredTickets.length === 0 && (
         <div className="no-results">Нет обращений по заданным фильтрам</div>
+      )}
+
+      {isNewRequestModalOpen && (
+        <NewRequestModal
+          onClose={() => setIsNewRequestModalOpen(false)}
+          onSuccess={handleNewRequestSuccess}
+        />
       )}
     </div>
   );
