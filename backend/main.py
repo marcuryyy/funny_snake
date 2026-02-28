@@ -258,66 +258,60 @@ async def get_table_csv(
     if not db_pool:
         raise HTTPException(status_code=503, detail="DB not ready")
 
-    def generate_csv():
-        async def stream_data():
-            async with db_pool.acquire() as conn:
-                headers_query = """
-                    SELECT column_name 
-                    FROM information_schema.columns 
-                    WHERE table_name = 'requests' 
-                    ORDER BY ordinal_position
-                """
-                headers_result = await conn.fetch(headers_query)
-                headers = [row['column_name'] for row in headers_result]
+    async def generate_csv():
+        async with db_pool.acquire() as conn:
+            headers_query = """
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name = 'requests' 
+                ORDER BY ordinal_position
+            """
+            headers_result = await conn.fetch(headers_query)
+            headers = [row['column_name'] for row in headers_result]
+            
+            output = io.StringIO()
+            writer = csv.writer(output)
+            writer.writerow(headers)
+            yield output.getvalue()
+            
+            batch_size = 5000
+            offset = 0
+            
+            while True:
+                batch = await get_filtered_requests(
+                    db_pool=db_pool,
+                    full_name=full_name,
+                    object_name=object_name,
+                    phone=phone,
+                    email=email,
+                    emotion=emotion,
+                    issue=issue,
+                    date_from=date_from,
+                    date_to=date_to,
+                    limit=batch_size,
+                    offset=offset
+                )
                 
+                if not batch:
+                    break
+                
+                csv_rows = []
+                for row in batch:
+                    # Предполагаем, что row имеет метод .dict(), иначе адаптируйте под вашу модель
+                    row_dict = row.dict() if hasattr(row, 'dict') else dict(row)
+                    csv_row = [str(row_dict.get(h, "")) for h in headers]
+                    csv_rows.append(csv_row)
+                
+                # Формируем CSV для текущего батча
                 output = io.StringIO()
                 writer = csv.writer(output)
-                writer.writerow(headers)
+                writer.writerows(csv_rows)
                 yield output.getvalue()
+                
+                # Очищаем буфер для следующего цикла (опционально, так как создается новый StringIO)
                 output.close()
                 
-                batch_size = 5000
-                offset = 0
-                
-                while True:
-                    batch = await get_filtered_requests(
-                        db_pool=db_pool,
-                        full_name=full_name,
-                        object_name=object_name,
-                        phone=phone,
-                        email=email,
-                        emotion=emotion,
-                        issue=issue,
-                        date_from=date_from,
-                        date_to=date_to,
-                        limit=batch_size,
-                        offset=offset
-                    )
-                    
-                    if not batch:
-                        break
-                    
-                    csv_rows = []
-                    for row in batch:
-                        row_dict = row.dict()
-                        csv_row = [str(row_dict.get(h, "")) for h in headers]
-                        csv_rows.append(csv_row)
-                    
-                    output = io.StringIO()
-                    writer = csv.writer(output)
-                    writer.writerows(csv_rows)
-                    yield output.getvalue()
-                    output.close()
-                    
-                    offset += batch_size
-        
-        loop = asyncio.get_event_loop()
-        gen = stream_data().__aiter__()
-        try:
-            while True:
-                yield loop.run_until_complete(gen.__anext__())
-        except StopAsyncIteration:
-            pass
+                offset += batch_size
 
     filename = f"requests_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
     
