@@ -12,6 +12,6 @@ CREATE TABLE IF NOT EXISTS requests (
   emotion           TEXT NOT NULL,
   question_summary  TEXT NOT NULL,
   llm_answer        TEXT NOT NULL,
-  task_status       task_statuses DEFAULT 'OPEN'
+  task_status       task_statuses DEFAULT 'OPEN',
   message_id        TEXT NOT NULL
 );
