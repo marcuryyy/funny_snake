@@ -18,3 +18,6 @@ class RequestCreate(RequestBase):
 
 class RequestResponse(RequestBase):
     id: int
+
+class AddNewRow(BaseModel):
+    id: int
