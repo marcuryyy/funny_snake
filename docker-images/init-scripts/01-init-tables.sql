@@ -1,4 +1,4 @@
-CREATE TYPE task_statuses as ENUM ('OPEN', 'IN PROGRESS', 'CLOSED');
+CREATE TYPE task_statuses as ENUM ('OPEN', 'CLOSED');
 
 CREATE TABLE IF NOT EXISTS requests (
   request_id        INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
