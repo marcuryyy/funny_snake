@@ -25,6 +25,9 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASS}
       POSTGRES_HOSTNAME: ${POSTGRES_HOSTNAME}
       POSTGRES_PORT: ${POSTGRES_PORT}
+      IMAP_EMAIL: ${IMAP_EMAIL}
+      EXTERNAL_PASS: ${EXTERNAL_PASS}
+
     ports:
       - "8000:8000"
     hostname: backend
