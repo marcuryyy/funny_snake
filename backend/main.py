@@ -1,9 +1,11 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic_models import FetchedMailsResponse
 from pydantic import BaseModel
 from datetime import date
 from typing import Optional, List
+from mail_fetch import fetch_emails
 import asyncpg
 import os
 import uvicorn
@@ -126,6 +128,12 @@ async def create_request(request_data: RequestCreate):
             emotion=row['emotion'],
             issue=row['question_summary']
         )
+    
+@app.get("/api/fetchMails", response_model=List[FetchedMailsResponse])
+async def get_mails():
+    msgs = fetch_emails(limit=10, save_attachments_dir="attachments")
+    return msgs
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
