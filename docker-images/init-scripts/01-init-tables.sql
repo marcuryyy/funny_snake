@@ -8,5 +8,6 @@ CREATE TABLE IF NOT EXISTS requests (
   factory_number    TEXT NOT NULL,
   device_type       TEXT NOT NULL,
   emotion           TEXT NOT NULL,
-  question_summary  TEXT NOT NULL
+  question_summary  TEXT NOT NULL,
+  message_id        TEXT NOT NULL
 );

@@ -140,6 +140,7 @@ async def get_filtered_requests(
                     deviceType=row["device_type"] or "",
                     emotion=row["emotion"],
                     issue=row["question_summary"] or "",
+                    message_id=row["message_id"] or ""
                 )
             )
         return result
@@ -256,7 +257,9 @@ async def send_mail_endpoint(
         subject=request.subject,
         body=request.body,
         html_body=request.html_body,
-        from_email=request.from_email
+        from_email=request.from_email,
+        message_id=request.message_id,
+        reply_to_thread=True
     )
     
     if success:

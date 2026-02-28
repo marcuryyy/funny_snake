@@ -11,13 +11,13 @@ from dotenv import load_dotenv
 load_dotenv()
 
 IMAP_SERVER = "imap.mail.ru"
-EMAIL_USER = os.getenv("IMAP_EMAIL", "enigma_hack@mail.ru")
-EMAIL_PASS = os.getenv("EXTERNAL_PASS", "rgPRLpzseUkkV9zSvsbj")
+EMAIL_USER = os.getenv("IMAP_EMAIL", "")
+EMAIL_PASS = os.getenv("EXTERNAL_PASS", "")
 API_BASE_URL = "http://localhost:8000"
 API_ENDPOINT = "/api/requests"
 
 
-async def process_letter_and_send_to_api(letter_text: str):
+async def process_letter_and_send_to_api(letter_text: str, message_id: str):
 
     llm = LLMPipeline()
 
@@ -36,6 +36,7 @@ async def process_letter_and_send_to_api(letter_text: str):
         deviceType=extracted_data.get("device_type", ""),
         emotion=extracted_data.get("emotional_tone", ""),
         issue=extracted_data.get("issue_summary"),
+        message_id=message_id
     )
 
     async with httpx.AsyncClient() as api_client:
@@ -67,5 +68,6 @@ if __name__ == "__main__":
     
     for msg in msgs:
         letter_text = msg["text"]
+        message_id = msg["message_id"]
 
-        asyncio.run(process_letter_and_send_to_api(letter_text))
+        asyncio.run(process_letter_and_send_to_api(letter_text, message_id))

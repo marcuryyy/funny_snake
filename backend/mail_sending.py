@@ -21,7 +21,9 @@ async def send_email(
     subject: str,
     body: str,
     from_email: Optional[str] = None,
-    html_body: Optional[str] = None
+    html_body: Optional[str] = None,
+    message_id: Optional[str] = None,
+    reply_to_thread: bool = False
 ) -> bool:
     from_email = from_email or SMTP_USER
 
@@ -31,9 +33,12 @@ async def send_email(
         msg['From'] = from_email 
         msg['To'] = ", ".join(to_emails)
 
+        if reply_to_thread and message_id:
+            msg['In-Reply-To'] = message_id
+            msg['References'] = message_id
+
         if html_body:
             msg_alt = MIMEMultipart('alternative')
-            
             msg.attach(MIMEText(body, 'plain', 'utf-8'))
             msg_alt.attach(MIMEText(body, 'plain', 'utf-8'))
             msg_alt.attach(MIMEText(html_body, 'html', 'utf-8'))
@@ -59,6 +64,7 @@ async def send_email(
     except Exception as e:
         print(f"Ошибка отправки: {str(e)}")
         return False
+
 
 
 if __name__ == "__main__":
