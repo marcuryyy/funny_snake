@@ -1,4 +1,4 @@
-CREATE TYPE task_statuses as ENUM ("OPEN", "IN PROGRESS", "CLOSED")
+CREATE TYPE task_statuses as ENUM ('OPEN', 'IN PROGRESS', 'CLOSED');
 
 CREATE TABLE IF NOT EXISTS requests (
   request_id        INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -12,5 +12,5 @@ CREATE TABLE IF NOT EXISTS requests (
   emotion           TEXT NOT NULL,
   question_summary  TEXT NOT NULL,
   llm_answer        TEXT NOT NULL,
-  task_status       task_statuses DEFAULT "OPEN"
+  task_status       task_statuses DEFAULT 'OPEN'
 );

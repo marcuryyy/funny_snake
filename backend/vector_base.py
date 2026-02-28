@@ -38,7 +38,7 @@ def load_and_split_pdfs(folder_path: str) -> List[Document]:
             print(f"Ошибка чтения {file_path}: {e}")
 
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=800, chunk_overlap=150, separators=["\n\n", "\n", ". ", " ", ""]
+        chunk_size=1000, chunk_overlap=200, separators=["\n\n", "\n", ". ", " ", ""]
     )
 
     splits = text_splitter.split_documents(all_docs)
@@ -48,7 +48,7 @@ def load_and_split_pdfs(folder_path: str) -> List[Document]:
 def create_vector_store(documents: List[Document]):
     embeddings = HuggingFaceEmbeddings(
         model_name=EMBEDDING_MODEL,
-        model_kwargs={"device": "cpu"},
+        model_kwargs={"device": "cuda"},
         encode_kwargs={"normalize_embeddings": True},
     )
 

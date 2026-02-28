@@ -24,7 +24,7 @@ async def process_letter(letter_text: str):
     extracted_data = await llm.extract_data(letter_text)
 
     llm_answer = await llm.ask_rag(letter_text)
-
+    print(llm_answer)
     if not extracted_data:
         return
 
@@ -65,9 +65,10 @@ async def process_letter(letter_text: str):
 
 
 if __name__ == "__main__":
-    msgs = fetch_emails(10, "output")
+    print(11)
+    msgs = fetch_emails(1, "output")
     #   print(msgs)
-    
+    print(1)
     for msg in msgs:
         letter_text = msg["text"]
 

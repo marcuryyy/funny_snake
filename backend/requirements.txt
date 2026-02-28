@@ -4,3 +4,6 @@ asyncpg
 asyncio
 beautifulsoup4
 python-dotenv
+rank-bm25
+langchain-community
+langchain-chroma

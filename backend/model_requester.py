@@ -21,7 +21,7 @@ class LLMPipeline:
         self.examples_path = examples_path
         self.system_prompt = (
             "Ты - мастер в извлечении данных из писем. "
-            "Ты отвечаешь ТОЛЬКО JSON словарем, без MARKDOWN, комментариев и других вещей."
+            "Ты отвечаешь ТОЛЬКО JSON словарем, без MARKDOWN, комментариев и других вещей. "
         )
         self._vector_db = get_or_create_index()
 
@@ -31,7 +31,8 @@ class LLMPipeline:
             examples: list[dict] = json.load(f)
 
         few_shot_prompt = (
-            "Изучи данные примеры. Они помогут тебе правильно извлечь информацию из поступающих писем."
+            "**НАЧАЛО БЛОКА ПРИМЕРОВ**"
+            "Изучи данные примеры. Они помогут тебе правильно извлечь информацию из поступающих писем. **НЕЛЬЗЯ** брать информацию из ПРИМЕРОВ!."
             "**emotional_tone** может быть одним из: положительное, нейтральное, негативное. Его **НУЖНО** определять всегда!"
             " Для остальных полей **КРОМЕ emotional_tone**, если нет информации, оставь пустую строку:\n"
         )
@@ -49,7 +50,7 @@ class LLMPipeline:
                 "**emotional_tone** может быть одним из: положительное, нейтральное, негативное. Определять нужно всегда."
                 "Для остальных полей **КРОМЕ emotional_tone**, если нет информации, оставь пустую строку\n\n"
             )
-
+        example_text += "\n **КОНЕЦ БЛОКА ПРИМЕРОВ**"
         return few_shot_prompt + example_text
 
     async def extract_data(self, letter_text: str) -> Optional[Dict[str, Any]]:
@@ -102,7 +103,7 @@ class LLMPipeline:
                 return None
 
     async def ask_rag(self, query: str, top_k: int = 3) -> str:
-        results = self._vectordb.similarity_search(query, k=top_k)
+        results = self._vector_db.similarity_search(query, k=top_k)
 
         if not results:
             return "Информация по вашему запросу не найдена в инструкциях."
