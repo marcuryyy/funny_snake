@@ -1,14 +1,15 @@
 from contextlib import asynccontextmanager
+import datetime
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic_models import FetchedMailsResponse
 from pydantic import BaseModel
 from datetime import date
-from typing import Optional, List
+from typing import Optional, List, Union
 from mail_fetch import fetch_emails
 import asyncpg
 import os
 import uvicorn
+from pydantic_models import AddNewRow, RequestCreate, RequestResponse, FetchedMailsResponse
 
 POSTGRES_DB_NAME = os.getenv("POSTGRES_DB", "postgres")
 POSTGRES_DB_USER = os.getenv("POSTGRES_USER", "postgres")
@@ -16,23 +17,53 @@ POSTGRES_DB_PASS = os.getenv("POSTGRES_PASSWORD", "postgres")
 POSTGRES_HOSTNAME = os.getenv("POSTGRES_HOSTNAME", "postgres")
 POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
 
-class RequestBase(BaseModel):
-    date: date
-    fullName: str
-    object: str
-    phone: Optional[str] = ""
-    email: Optional[str] = ""
-    serialNumbers: Optional[str] = ""
-    deviceType: Optional[str] = ""
-    emotion: str
-    issue: str
+def date_to_str(date_obj: Optional[Union[datetime.date, datetime.datetime, str]]) -> str:
+    """
+    Конвертирует объект даты в строку формата 'YYYY-MM-DD'.
+    
+    Args:
+        date_obj: Объект date, datetime или строка.
+        
+    Returns:
+        Строка в формате 'YYYY-MM-DD'. Если вход None или пустой, возвращает текущую дату.
+    """
+    if date_obj is None or date_obj == "":
+        return datetime.date.today().isoformat()
+    
+    
+    if isinstance(date_obj, str):
+        return date_obj
+    
+    
+    if isinstance(date_obj, (datetime.date, datetime.datetime)):
+        return date_obj.strftime("%Y-%m-%d")
+    
+    
+    return str(date_obj)
 
-class RequestCreate(RequestBase):
-    pass
+def parse_date_string(date_str: str) -> datetime.date:
+    """Парсит строку даты в объект datetime.date."""
+    if not date_str:
+        return datetime.date.today() 
+    
+    date_str = str(date_str).strip()
+    
+    
+    formats = [
+        "%d.%m.%Y",  
+        "%Y-%m-%d",  
+        "%d/%m/%Y",  
+        "%Y/%m/%d",  
+        "%d.%m.%y",  
+    ]
+    
+    for fmt in formats:
+        try:
+            return datetime.datetime.strptime(date_str, fmt).date()
+        except ValueError:
+            continue
 
-class RequestResponse(RequestBase):
-    id: int
-
+    return datetime.date.today()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
@@ -78,7 +109,7 @@ async def get_requests():
         for row in rows:
             result.append(RequestResponse(
                 id=row['request_id'],
-                date=row['req_date'],
+                date=date_to_str(row['req_date']),
                 fullName=row['full_name'],
                 object=row['object_name'],
                 phone=row['phone'] or "",
@@ -90,11 +121,14 @@ async def get_requests():
             ))
         return result
 
-@app.post("/api/requests", response_model=RequestResponse)
+@app.post("/api/requests", response_model=AddNewRow)
 async def create_request(request_data: RequestCreate):
     db_pool = app.state.db_pool
     if not db_pool:
         raise HTTPException(status_code=503, detail="DB not ready")
+
+    raw_date = request_data.date
+    parsed_date = parse_date_string(raw_date)
 
     async with db_pool.acquire() as conn:
         query = '''
@@ -105,7 +139,7 @@ async def create_request(request_data: RequestCreate):
         '''
         row = await conn.fetchrow(
             query,
-            request_data.date, 
+            parsed_date, 
             request_data.fullName, 
             request_data.object, 
             request_data.phone,
@@ -116,17 +150,8 @@ async def create_request(request_data: RequestCreate):
             request_data.issue
         )
         
-        return RequestResponse(
-            id=row['request_id'],
-            date=row['req_date'],
-            fullName=row['full_name'],
-            object=row['object_name'],
-            phone=row['phone'] or "",
-            email=row['email'] or "",
-            serialNumbers=row['serial_numbers'] or "",
-            deviceType=row['device_type'] or "",
-            emotion=row['emotion'],
-            issue=row['question_summary']
+        return AddNewRow(
+            id=row['request_id']
         )
     
 @app.get("/api/fetchMails", response_model=List[FetchedMailsResponse])

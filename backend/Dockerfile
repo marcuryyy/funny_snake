@@ -14,10 +14,8 @@ RUN apt-get update \
         python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
+COPY . .
 
 RUN pip3 install -r requirements.txt
-
-COPY main.py .
 
 CMD ["python3", "-u", "main.py"]
