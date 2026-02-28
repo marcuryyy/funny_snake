@@ -7,6 +7,7 @@ import csv
 import io
 from typing import Optional, List, Union
 from mail_fetch import fetch_emails
+from mail_sending import send_email
 import asyncpg
 import asyncio
 import os
@@ -16,6 +17,7 @@ from pydantic_models import (
     RequestCreate,
     RequestResponse,
     FetchedMailsResponse,
+    EmailRequest
 )
 
 POSTGRES_DB_NAME = os.getenv("POSTGRES_DB", "postgres")
@@ -245,6 +247,26 @@ async def get_mails():
     msgs = fetch_emails(limit=10, save_attachments_dir="attachments")
     return msgs
 
+@app.post("/api/sendMail")
+async def send_mail_endpoint(
+    request: EmailRequest
+):    
+    success = await send_email(
+        to_emails=request.to_emails,
+        subject=request.subject,
+        body=request.body,
+        html_body=request.html_body,
+        from_email=request.from_email
+    )
+    
+    if success:
+        return {
+            "status": "success",
+            "message": f"Email отправлен на {len(request.to_emails)} адресов",
+            "recipients": request.to_emails,
+        }
+    else:
+        raise HTTPException(status_code=500, detail="Ошибка отправки email")
 
 @app.get("/api/getCsv")
 async def get_table_csv(

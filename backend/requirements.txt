@@ -4,3 +4,4 @@ asyncpg
 asyncio
 beautifulsoup4
 python-dotenv
+aiosmtplib
