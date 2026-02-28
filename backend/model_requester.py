@@ -11,7 +11,7 @@ class LLMPipeline:
         api_key: str = "lm-studio",
         model: str = "qwen",
         timeout: float = 120.0,
-        examples_path: str = "./examples.json"
+        examples_path: str = "./examples.json",
     ):
         self.base_url = base_url
         self.api_key = api_key
@@ -29,12 +29,12 @@ class LLMPipeline:
             examples: list[dict] = json.load(f)
 
         few_shot_prompt = (
-            "Изучи данные примеры. Они помогут тебе правильно извлечь информацию из поступающих писем." 
+            "Изучи данные примеры. Они помогут тебе правильно извлечь информацию из поступающих писем."
             "**emotional_tone** может быть одним из: положительное, нейтральное, негативное. Его **НУЖНО** определять всегда!"
             " Для остальных полей **КРОМЕ emotional_tone**, если нет информации, оставь пустую строку:\n"
         )
         example_text = ""
-        
+
         for idx, example in enumerate(examples):
             full_text = example.pop("full_letter_text")
 
@@ -53,20 +53,20 @@ class LLMPipeline:
     async def extract_data(self, letter_text: str) -> Optional[Dict[str, Any]]:
         """
         Отправляет письмо модели и возвращает распарсенный JSON словарь.
-        
+
         Args:
             letter_text: Текст письма для обработки.
-            
+
         Returns:
             Словарь с извлеченными данными или None в случае ошибки.
         """
         example_block = self._load_examples()
         user_prompt = f"Извлеки данные из письма:\n{letter_text}"
-        
+
         url = f"{self.base_url}/chat/completions"
         headers = {
             "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
         payload = {
             "model": self.model,
@@ -81,13 +81,13 @@ class LLMPipeline:
                 response = await client.post(url, json=payload, headers=headers)
                 response.raise_for_status()
                 data = response.json()
-                
+
                 content = data["choices"][0]["message"]["content"]
-                
+
                 content = content.strip()
-                
+
                 return json.loads(content)
-                
+
             except httpx.ReadTimeout:
                 print("Ошибка: Превышено время ожидания ответа от модели.")
                 return None
