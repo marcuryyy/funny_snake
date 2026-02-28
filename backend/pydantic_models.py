@@ -15,7 +15,7 @@ class RequestBase(BaseModel):
     object: str
     phone: Optional[str] = ""
     email: Optional[str] = ""
-    serialNumbers: Optional[str] = ""
+    factoryNumber: Optional[str] = ""
     deviceType: Optional[str] = ""
     emotion: str
     issue: str

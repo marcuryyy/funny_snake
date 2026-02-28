@@ -87,12 +87,19 @@ function TicketsTable({ onTicketSelect }) {
   };
 
   const exportToCSV = () => {
-    const params = new URLSearchParams();
-    if (searchTerm) params.set('full_name', searchTerm);
-    if (filterEmotion) params.set('emotion', filterEmotion);
-    if (filterDevice) params.set('device_type', filterDevice);
-    if (dateFrom) params.set('date_from', dateFrom);
-    if (dateTo) params.set('date_to', dateTo);
+    const headers = ['ID', 'ФИО', 'Объект', 'Телефон', 'Email', 'Устройство', 'Серийный номер', 'Эмоция', 'Проблема', 'Дата'];
+    const rows = filteredTickets.map((t) => [
+      t.id,
+      t.fullName,
+      t.object,
+      t.phone,
+      t.email,
+      t.deviceType,
+      t.factoryNumber,
+      t.emotion,
+      t.issue,
+      t.date,
+    ]);
 
     const url = `${CSV_URL}?${params.toString()}`;
     window.open(url, '_blank');
