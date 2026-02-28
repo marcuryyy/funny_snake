@@ -16,7 +16,6 @@ function TicketDetail({ ticket, onClose }) {
 
   const handleStatusChange = async (newStatus) => {
     setStatus(newStatus);
-    // Здесь будет API вызов для обновления статуса
     console.log('Статус изменён на:', newStatus);
   };
 
@@ -28,7 +27,6 @@ function TicketDetail({ ticket, onClose }) {
 
     setSending(true);
     try {
-      // Здесь будет отправка ответа через API
       await new Promise((resolve) => setTimeout(resolve, 500));
       alert(`Ответ отправлен клиенту ${ticket.fullName}`);
       onClose();
@@ -95,7 +93,7 @@ function TicketDetail({ ticket, onClose }) {
           </div>
           <div className="info-item">
             <label>Серийный номер:</label>
-            <span>{ticket.serialNumbers || '—'}</span>
+            <span>{ticket.factoryNumber || '—'}</span>
           </div>
           <div className="info-item">
             <label>Эмоция:</label>

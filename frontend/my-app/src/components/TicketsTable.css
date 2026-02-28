@@ -1,6 +1,6 @@
 .tickets-table-container {
   padding: 24px;
-  max-width: 1600px;
+  max-width: 1400px;
   margin: 0 auto;
 }
 
@@ -8,56 +8,17 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .tickets-header h2 {
   margin: 0;
   font-size: 20px;
-<<<<<<< Updated upstream
-  color: #111827;
-  font-weight: 600;
-=======
   color: #1a1a2e;
->>>>>>> Stashed changes
 }
 
 .header-actions {
   display: flex;
-<<<<<<< Updated upstream
-  gap: 8px;
-}
-
-.btn-new, .btn-refresh, .btn-export {
-  background: #ffffff;
-  color: #374151;
-  border: 1px solid #d1d5db;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.btn-new {
-  background: #2563eb;
-  color: #ffffff;
-  border: 1px solid #2563eb;
-}
-
-.btn-new:hover {
-  background: #1d4ed8;
-  border-color: #1d4ed8;
-}
-
-.btn-refresh:hover, .btn-export:hover {
-  background: #f3f4f6;
-  border-color: #9ca3af;
-=======
   gap: 10px;
 }
 
@@ -107,50 +68,27 @@
 
 .btn-export:hover {
   border-color: #333;
->>>>>>> Stashed changes
 }
 
 .filters {
   display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: 12px;
+  margin-bottom: 24px;
   flex-wrap: wrap;
 }
 
 .search-input {
   flex: 1;
-<<<<<<< Updated upstream
-  min-width: 250px;
-  padding: 8px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 13px;
-  transition: border-color 0.15s;
-  background: #ffffff;
-=======
   min-width: 200px;
   padding: 10px 14px;
   border: 1px solid #e0e0e0;
   border-radius: 6px;
   font-size: 14px;
   transition: border-color 0.2s;
->>>>>>> Stashed changes
 }
 
 .search-input:focus {
   outline: none;
-<<<<<<< Updated upstream
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-}
-
-.filters select {
-  padding: 8px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 13px;
-  background: #ffffff;
-=======
   border-color: #333;
 }
 
@@ -160,110 +98,12 @@
   border-radius: 6px;
   font-size: 14px;
   background: white;
->>>>>>> Stashed changes
   cursor: pointer;
-  transition: border-color 0.15s;
-  color: #374151;
+  transition: border-color 0.2s;
 }
 
 .filters select:focus {
   outline: none;
-<<<<<<< Updated upstream
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-}
-
-.tickets-table-wrapper {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.tickets-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-
-.tickets-table thead {
-  background: #f9fafb;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.tickets-table th {
-  text-align: left;
-  padding: 12px 16px;
-  font-weight: 600;
-  color: #6b7280;
-  text-transform: uppercase;
-  font-size: 11px;
-  letter-spacing: 0.05em;
-}
-
-.tickets-table td {
-  padding: 12px 16px;
-  border-bottom: 1px solid #e5e7eb;
-  color: #374151;
-}
-
-.tickets-table tbody tr {
-  transition: background-color 0.15s;
-  cursor: pointer;
-}
-
-.tickets-table tbody tr:hover {
-  background: #f9fafb;
-}
-
-.tickets-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.emotion-cell {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.emotion-badge {
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: #f3f4f6;
-  color: #374151;
-}
-
-.device-type-cell {
-  color: #6b7280;
-}
-
-.id-cell {
-  font-weight: 600;
-  color: #6b7280;
-}
-
-.name-cell {
-  font-weight: 500;
-  color: #111827;
-}
-
-.issue-cell {
-  max-width: 300px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: #6b7280;
-}
-
-.date-cell {
-  color: #9ca3af;
-  font-family: monospace;
-=======
   border-color: #333;
 }
 
@@ -284,17 +124,12 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 16px;
->>>>>>> Stashed changes
 }
 
 .no-results {
   text-align: center;
   padding: 48px;
-<<<<<<< Updated upstream
-  color: #6b7280;
-=======
   color: #666;
->>>>>>> Stashed changes
   font-size: 14px;
 }
 
@@ -302,11 +137,7 @@
   padding: 48px;
   text-align: center;
   font-size: 14px;
-<<<<<<< Updated upstream
-  color: #6b7280;
-=======
   color: #666;
->>>>>>> Stashed changes
 }
 
 .error-container {
@@ -318,13 +149,8 @@
 }
 
 .error-message {
-<<<<<<< Updated upstream
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-=======
   background: #ffebee;
   border: 1px solid #ef5350;
->>>>>>> Stashed changes
   border-radius: 8px;
   padding: 24px;
   text-align: center;
@@ -333,40 +159,17 @@
 
 .error-message h3 {
   margin: 0 0 12px 0;
-<<<<<<< Updated upstream
-  color: #dc2626;
-=======
   color: #c62828;
->>>>>>> Stashed changes
   font-size: 16px;
 }
 
 .error-message p {
   margin: 0 0 16px 0;
-<<<<<<< Updated upstream
-  color: #6b7280;
-=======
   color: #666;
->>>>>>> Stashed changes
   font-size: 13px;
 }
 
 .btn-retry {
-<<<<<<< Updated upstream
-  background: #ffffff;
-  color: #374151;
-  border: 1px solid #d1d5db;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.btn-retry:hover {
-  background: #f3f4f6;
-=======
   background: #333;
   color: white;
   border: none;
@@ -414,5 +217,4 @@
 .page-info {
   font-size: 14px;
   color: #666;
->>>>>>> Stashed changes
 }

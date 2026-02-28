@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import './TicketCard.css';
 
 const STATUS_LABELS = {

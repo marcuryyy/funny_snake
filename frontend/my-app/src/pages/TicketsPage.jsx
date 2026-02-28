@@ -8,7 +8,7 @@ function TicketsPage() {
 
   return (
     <div className="tickets-page">
-      <TicketsTable />
+      <TicketsTable onTicketSelect={setSelectedTicket} />
       {selectedTicket && (
         <TicketDetail ticket={selectedTicket} onClose={() => setSelectedTicket(null)} />
       )}
