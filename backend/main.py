@@ -143,7 +143,7 @@ async def get_filtered_requests(
                     emotion=row["emotion"],
                     issue=row["question_summary"] or "",
                     llm_answer=row["llm_answer"] or "",
-                    task_status=row["task_status"] or "OPEN"
+                    task_status=row["task_status"] or "OPEN",
                     message_id=row["message_id"] or ""
                 )
             )
