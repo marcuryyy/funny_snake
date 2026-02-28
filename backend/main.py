@@ -26,7 +26,7 @@ POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
 
 
 def date_to_str(
-    date_obj: Optional[Union[datetime.date, datetime.datetime, str]],
+    date_obj: Optional[Union[date, datetime, str]],
 ) -> str:
     """
     Конвертирует объект даты в строку формата 'YYYY-MM-DD'.
@@ -38,21 +38,21 @@ def date_to_str(
         Строка в формате 'YYYY-MM-DD'. Если вход None или пустой, возвращает текущую дату.
     """
     if date_obj is None or date_obj == "":
-        return datetime.date.today().isoformat()
+        return date.today().isoformat()
 
     if isinstance(date_obj, str):
         return date_obj
 
-    if isinstance(date_obj, (datetime.date, datetime.datetime)):
+    if isinstance(date_obj, (date, datetime)):
         return date_obj.strftime("%Y-%m-%d")
 
     return str(date_obj)
 
 
-def parse_date_string(date_str: str) -> datetime.date:
-    """Парсит строку даты в объект datetime.date."""
+def parse_date_string(date_str: str) -> date:
+    """Парсит строку даты в объект date."""
     if not date_str:
-        return datetime.date.today()
+        return date.today()
 
     date_str = str(date_str).strip()
 
@@ -66,11 +66,11 @@ def parse_date_string(date_str: str) -> datetime.date:
 
     for fmt in formats:
         try:
-            return datetime.datetime.strptime(date_str, fmt).date()
+            return datetime.strptime(date_str, fmt).date()
         except ValueError:
             continue
 
-    return datetime.date.today()
+    return date.today()
 
 async def get_filtered_requests(
     db_pool, 
@@ -313,7 +313,7 @@ async def get_table_csv(
                 
                 offset += batch_size
 
-    filename = f"requests_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    filename = f"requests_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
     
     return StreamingResponse(
         generate_csv(),
