@@ -1,15 +1,16 @@
 import json
+from vector_base import get_or_create_index
 import httpx
 import asyncio
 from typing import Optional, Dict, Any
-
+from cfg import *
 
 class LLMPipeline:
     def __init__(
         self,
-        base_url: str = "http://localhost:1234/v1",
-        api_key: str = "lm-studio",
-        model: str = "qwen",
+        base_url: str = LLM_BASE_URL,
+        api_key: str = LLM_API_KEY,
+        model: str = LLM_MODEL,
         timeout: float = 120.0,
         examples_path: str = "./examples.json",
     ):
@@ -22,6 +23,7 @@ class LLMPipeline:
             "Ты - мастер в извлечении данных из писем. "
             "Ты отвечаешь ТОЛЬКО JSON словарем, без MARKDOWN, комментариев и других вещей."
         )
+        self._vector_db = get_or_create_index()
 
     def _load_examples(self) -> str:
         """Формирует промпт с примерами (few-shot)."""
@@ -98,3 +100,51 @@ class LLMPipeline:
             except Exception as e:
                 print(f"Произошла ошибка при запросе: {e}")
                 return None
+
+    async def ask_rag(self, query: str, top_k: int = 3) -> str:
+        results = self._vectordb.similarity_search(query, k=top_k)
+
+        if not results:
+            return "Информация по вашему запросу не найдена в инструкциях."
+        context_text = ""
+        sources = set()
+        for i, doc in enumerate(results):
+            context_text += f"[Источник: {doc.metadata.get('source', 'Unknown')}]\n{doc.page_content}\n\n"
+            sources.add(doc.metadata.get("source", "Unknown"))
+
+        system_prompt = (
+            "Ты - технический помощник. Твоя задача отвечать на вопросы ТОЛЬКО на основе предоставленного контекста из инструкций.\n"
+            "Если ответа нет в контексте, скажи: 'В предоставленных инструкциях нет информации об этом'.\n"
+            "Не выдумывай факты. Ссылайся на название прибора, если оно известно из контекста."
+        )
+
+        user_prompt = f"""Контекст из инструкций:
+        {context_text}
+
+        Вопрос пользователя: {query}
+
+        Ответ:"""
+        payload = {
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            "temperature": 0.3,
+        }
+        url = f"{self.base_url}/chat/completions"
+        async with httpx.AsyncClient(timeout=httpx.Timeout(120.0)) as client:
+            try:
+                resp = await client.post(
+                    url,
+                    json=payload,
+                    headers={"Authorization": f"Bearer {LLM_API_KEY}"},
+                )
+                resp.raise_for_status()
+                answer = resp.json()["choices"][0]["message"]["content"]
+
+                answer += f"\n\nИспользованные файлы: {', '.join(sources)}"
+                return answer
+
+            except Exception as e:
+                return f"Ошибка при обращении к нейросети: {e}"

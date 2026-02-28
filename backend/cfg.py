@@ -1,0 +1,7 @@
+
+PDF_FOLDER = "./instructions_pdf"
+PERSIST_DIRECTORY = "./chroma_db"
+EMBEDDING_MODEL = "DeepPavlov/rubert-base-cased-sentence"
+LLM_BASE_URL = "http://localhost:1234/v1"
+LLM_MODEL = "qwen"
+LLM_API_KEY = "lm-studio"
