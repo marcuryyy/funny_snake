@@ -1,6 +1,6 @@
 .tickets-table-container {
   padding: 24px;
-  max-width: 1400px;
+  max-width: 1600px;
   margin: 0 auto;
 }
 
@@ -20,6 +20,37 @@
 .header-actions {
   display: flex;
   gap: 10px;
+  align-items: center;
+}
+
+.view-toggle {
+  display: flex;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.toggle-btn {
+  background: white;
+  border: none;
+  padding: 8px 16px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-right: 1px solid #e0e0e0;
+}
+
+.toggle-btn:last-child {
+  border-right: none;
+}
+
+.toggle-btn.active {
+  background: #333;
+  color: white;
+}
+
+.toggle-btn:hover:not(.active) {
+  background: #f0f0f0;
 }
 
 .btn-add {
@@ -120,10 +151,187 @@
   border-color: #333;
 }
 
+.tickets-table-wrapper {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.tickets-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.tickets-table thead {
+  background: #f9fafb;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.tickets-table th {
+  text-align: left;
+  padding: 12px 16px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.tickets-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e0e0e0;
+  color: #333;
+}
+
+.tickets-table tbody tr {
+  transition: background-color 0.15s;
+  cursor: pointer;
+}
+
+.tickets-table tbody tr:hover {
+  background: #f5f5f5;
+}
+
+.tickets-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table-row-clickable:hover {
+  background: #f0f0f0;
+}
+
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.status-badge.status-new {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.status-badge.status-progress {
+  background: #fff3e0;
+  color: #f57c00;
+}
+
+.status-badge.status-closed {
+  background: #e8f5e9;
+  color: #388e3c;
+}
+
+.emotion-badge {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  background: #f5f5f5;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.id-cell {
+  font-weight: 600;
+  color: #666;
+}
+
+.name-cell {
+  font-weight: 500;
+  color: #1a1a2e;
+}
+
+.issue-cell {
+  max-width: 250px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #666;
+}
+
+.date-cell {
+  color: #666;
+  font-family: monospace;
+  white-space: nowrap;
+}
+
 .tickets-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 16px;
+  margin-bottom: 24px;
+}
+
+.ticket-card {
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 1px solid #e0e0e0;
+}
+
+.ticket-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.ticket-card .ticket-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ticket-card .ticket-issue {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a2e;
+  line-height: 1.4;
+}
+
+.ticket-card .ticket-name {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  color: #666;
+}
+
+.ticket-card .ticket-object {
+  margin: 0 0 12px 0;
+  font-size: 13px;
+  color: #666;
+}
+
+.ticket-card .ticket-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ticket-card .ticket-phone {
+  font-size: 12px;
+  color: #333;
+}
+
+.ticket-card .ticket-date {
+  font-size: 11px;
+  color: #999;
 }
 
 .no-results {
@@ -190,7 +398,6 @@
   justify-content: center;
   align-items: center;
   gap: 16px;
-  margin-top: 24px;
   padding-top: 24px;
   border-top: 1px solid #e0e0e0;
 }

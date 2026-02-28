@@ -1,10 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
-import TicketCard from './TicketCard';
 import AddTicketModal from './AddTicketModal';
 import './TicketsTable.css';
 
 const API_URL = 'http://localhost:8000/api/requests';
 const CSV_URL = 'http://localhost:8000/api/getCsv';
+
+const STATUS_LABELS = {
+  new: { label: 'Новый', color: 'status-new' },
+  in_progress: { label: 'В работе', color: 'status-progress' },
+  closed: { label: 'Закрыт', color: 'status-closed' },
+};
 
 function TicketsTable({ onTicketSelect }) {
   const [tickets, setTickets] = useState([]);
@@ -20,16 +25,17 @@ function TicketsTable({ onTicketSelect }) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [availableEmotions, setAvailableEmotions] = useState([]);
   const [availableDevices, setAvailableDevices] = useState([]);
+  const [viewMode, setViewMode] = useState('table');
 
   const fetchTickets = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const params = new URLSearchParams();
       params.set('page', page);
       params.set('limit', limit);
-      
+
       if (searchTerm) {
         params.set('full_name', searchTerm);
       }
@@ -87,19 +93,12 @@ function TicketsTable({ onTicketSelect }) {
   };
 
   const exportToCSV = () => {
-    const headers = ['ID', 'ФИО', 'Объект', 'Телефон', 'Email', 'Устройство', 'Серийный номер', 'Эмоция', 'Проблема', 'Дата'];
-    const rows = filteredTickets.map((t) => [
-      t.id,
-      t.fullName,
-      t.object,
-      t.phone,
-      t.email,
-      t.deviceType,
-      t.factoryNumber,
-      t.emotion,
-      t.issue,
-      t.date,
-    ]);
+    const params = new URLSearchParams();
+    if (searchTerm) params.set('full_name', searchTerm);
+    if (filterEmotion) params.set('emotion', filterEmotion);
+    if (filterDevice) params.set('device_type', filterDevice);
+    if (dateFrom) params.set('date_from', dateFrom);
+    if (dateTo) params.set('date_to', dateTo);
 
     const url = `${CSV_URL}?${params.toString()}`;
     window.open(url, '_blank');
@@ -128,6 +127,20 @@ function TicketsTable({ onTicketSelect }) {
       <div className="tickets-header">
         <h2>Обращения</h2>
         <div className="header-actions">
+          <div className="view-toggle">
+            <button
+              className={`toggle-btn ${viewMode === 'table' ? 'active' : ''}`}
+              onClick={() => setViewMode('table')}
+            >
+              Таблица
+            </button>
+            <button
+              className={`toggle-btn ${viewMode === 'cards' ? 'active' : ''}`}
+              onClick={() => setViewMode('cards')}
+            >
+              Карточки
+            </button>
+          </div>
           <button className="btn-add" onClick={() => setShowAddModal(true)}>
             Добавить
           </button>
@@ -151,8 +164,8 @@ function TicketsTable({ onTicketSelect }) {
           }}
           className="search-input"
         />
-        <select 
-          value={filterEmotion} 
+        <select
+          value={filterEmotion}
           onChange={(e) => {
             setFilterEmotion(e.target.value);
             setPage(1);
@@ -165,8 +178,8 @@ function TicketsTable({ onTicketSelect }) {
             </option>
           ))}
         </select>
-        <select 
-          value={filterDevice} 
+        <select
+          value={filterDevice}
           onChange={(e) => {
             setFilterDevice(e.target.value);
             setPage(1);
@@ -201,26 +214,103 @@ function TicketsTable({ onTicketSelect }) {
         />
       </div>
 
-      <div className="tickets-grid">
-        {tickets.map((ticket) => (
-          <TicketCard key={ticket.id} ticket={ticket} onSelect={onTicketSelect} />
-        ))}
-      </div>
+      {viewMode === 'table' ? (
+        <div className="tickets-table-wrapper">
+          <table className="tickets-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Дата</th>
+                <th>Статус</th>
+                <th>ФИО</th>
+                <th>Объект</th>
+                <th>Телефон</th>
+                <th>Email</th>
+                <th>Устройство</th>
+                <th>Серийный номер</th>
+                <th>Эмоция</th>
+                <th>Проблема</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tickets.map((ticket) => {
+                const status = ticket.status || 'new';
+                const statusInfo = STATUS_LABELS[status] || STATUS_LABELS.new;
+                return (
+                  <tr
+                    key={ticket.id}
+                    onClick={() => onTicketSelect && onTicketSelect(ticket)}
+                    className="table-row-clickable"
+                  >
+                    <td className="id-cell">#{ticket.id}</td>
+                    <td className="date-cell">{ticket.date}</td>
+                    <td>
+                      <span className={`status-badge ${statusInfo.color}`}>
+                        {statusInfo.label}
+                      </span>
+                    </td>
+                    <td className="name-cell">{ticket.fullName}</td>
+                    <td>{ticket.object}</td>
+                    <td>{ticket.phone || '—'}</td>
+                    <td>{ticket.email || '—'}</td>
+                    <td>{ticket.deviceType}</td>
+                    <td>{ticket.factoryNumber || '—'}</td>
+                    <td>
+                      <span className="emotion-badge">{ticket.emotion}</span>
+                    </td>
+                    <td className="issue-cell" title={ticket.issue}>
+                      {ticket.issue}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="tickets-grid">
+          {tickets.map((ticket) => {
+            const status = ticket.status || 'new';
+            const statusInfo = STATUS_LABELS[status] || STATUS_LABELS.new;
+            return (
+              <div
+                key={ticket.id}
+                className="ticket-card"
+                onClick={() => onTicketSelect && onTicketSelect(ticket)}
+              >
+                <div className="ticket-header">
+                  <span className={`status-badge ${statusInfo.color}`}>
+                    {statusInfo.label}
+                  </span>
+                  <span className="emotion-badge">{ticket.emotion}</span>
+                </div>
+                <h3 className="ticket-issue">{ticket.issue}</h3>
+                <p className="ticket-name">{ticket.fullName}</p>
+                <p className="ticket-object">{ticket.object}</p>
+                <div className="ticket-footer">
+                  {ticket.phone && <span className="ticket-phone">{ticket.phone}</span>}
+                  <span className="ticket-date">{ticket.date}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {tickets.length === 0 && (
         <div className="no-results">Нет обращений по заданным фильтрам</div>
       )}
 
       <div className="pagination">
-        <button 
-          className="btn-page" 
+        <button
+          className="btn-page"
           onClick={() => setPage(p => Math.max(1, p - 1))}
           disabled={page === 1}
         >
           Назад
         </button>
         <span className="page-info">Страница {page}</span>
-        <button 
+        <button
           className="btn-page"
           onClick={() => setPage(p => p + 1)}
           disabled={tickets.length < limit}
