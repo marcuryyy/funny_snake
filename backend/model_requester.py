@@ -1,8 +1,13 @@
 import json
-from vector_base import get_or_create_index
-import httpx
 import asyncio
 from typing import Optional, Dict, Any
+from vector_base import (
+    get_rag_index,
+    get_history_index,
+    find_similar_letter,
+    save_letter_to_history,
+)
+import httpx
 from cfg import *
 
 
@@ -24,26 +29,41 @@ class LLMPipeline:
             "Ты - мастер в извлечении данных из писем. "
             "Ты отвечаешь ТОЛЬКО JSON словарем, без MARKDOWN, комментариев и других вещей. "
         )
-        self._vector_db = get_or_create_index()
+
+        self._rag_db = None
+        self._history_db = None
+
+    @property
+    def rag_db(self):
+        if self._rag_db is None:
+            self._rag_db = get_rag_index()
+        return self._rag_db
+
+    @property
+    def history_db(self):
+        if self._history_db is None:
+            self._history_db = get_history_index()
+        return self._history_db
 
     def _load_examples(self) -> str:
         """Формирует промпт с примерами (few-shot)."""
-        with open(self.examples_path, encoding="utf-8") as f:
-            examples: list[dict] = json.load(f)
+        try:
+            with open(self.examples_path, encoding="utf-8") as f:
+                examples: list[dict] = json.load(f)
+        except FileNotFoundError:
+            examples = []
 
         few_shot_prompt = (
-            "**НАЧАЛО БЛОКА ПРИМЕРОВ**"
             "Изучи данные примеры. Они помогут тебе правильно извлечь информацию из поступающих писем. **НЕЛЬЗЯ** брать информацию из ПРИМЕРОВ!."
             "**emotional_tone** может быть одним из: положительное, нейтральное, негативное. Его **НУЖНО** определять всегда!"
-            " Для остальных полей **КРОМЕ emotional_tone**, если нет информации, оставь пустую строку:\n"
+            " Для остальных полей **КРОМЕ emotional_tone**, если нет информации, оставь пустую строку:"
+            "**НАЧАЛО БЛОКА ПРИМЕРОВ\n\n**"
         )
         example_text = ""
 
         for idx, example in enumerate(examples):
             full_text = example.pop("full_letter_text")
-
             example_text += f"Пример {idx + 1}:\n{full_text}\n\n"
-
             expected_json_str = json.dumps(example, ensure_ascii=False, indent=2)
             example_text += f"Ожидаемый json:\n{expected_json_str}\n"
             example_text += (
@@ -51,13 +71,15 @@ class LLMPipeline:
                 "**emotional_tone** может быть одним из: положительное, нейтральное, негативное. Определять нужно всегда."
                 "Для остальных полей **КРОМЕ emotional_tone**, если нет информации, оставь пустую строку\n\n"
             )
-        example_text += "\n **КОНЕЦ БЛОКА ПРИМЕРОВ**"
+
+        if examples:
+            example_text += "**ОБРАТИ ВНИМАНИЕ** на то, КАК ВЫГЛЯДИТ factory_number: ОН **ВСЕГДА** содержит в себе **9 ЦИФР**. ДРУГИЕ ВАРИАНТЫ НЕВОЗМОЖНЫ! НЕ БЕРИ ИНФОРМАЦИЮ ИЗ ПРИМЕРОВ!\n"
+
+        example_text += "**КОНЕЦ БЛОКА ПРИМЕРОВ**"
         return few_shot_prompt + example_text
 
     async def extract_data(self, letter_text: str) -> Optional[Dict[str, Any]]:
-        """
-        Отправляет письмо модели и возвращает распарсенный JSON словарь.
-        """
+        """Извлекает структурированные данные из письма."""
         example_block = self._load_examples()
         user_prompt = f"Извлеки данные из письма:\n{letter_text}"
 
@@ -72,6 +94,7 @@ class LLMPipeline:
                 {"role": "system", "content": self.system_prompt},
                 {"role": "user", "content": f"{example_block}\n{user_prompt}"},
             ],
+            "temperature": 0.2,
         }
 
         async with httpx.AsyncClient(timeout=self.timeout) as client:
@@ -79,41 +102,22 @@ class LLMPipeline:
                 response = await client.post(url, json=payload, headers=headers)
                 response.raise_for_status()
                 data = response.json()
-
-                content = data["choices"][0]["message"]["content"]
-                content = content.strip()
-
+                content = data["choices"][0]["message"]["content"].strip()
                 return json.loads(content)
-
-            except httpx.ReadTimeout:
-                print("Ошибка: Превышено время ожидания ответа от модели.")
-                return None
-            except json.JSONDecodeError as e:
-                print(f"Ошибка парсинга JSON ответа: {e}")
-                print(f"Полученный ответ: {data['choices'][0]['message']['content']}")
-                return None
             except Exception as e:
-                print(f"Произошла ошибка при запросе: {e}")
+                print(f"Ошибка извлечения данных: {e}")
                 return None
 
-    async def rewrite_query_for_rag(self, user_query: str) -> str:
+    async def ask_rag(self, query: str, message_id: str = "unknown") -> str:
         """
-        Перефразирует пользовательский запрос в стиль технической документации,
-        удаляя эмоции, личные местоимения и лишние слова для улучшения поиска в RAG.
+        Главная логика ответа:
+        1. Проверяем историю (есть ли похожее письмо?). Если да -> возвращаем готовый ответ.
+        2. Если нет -> делаем RAG поиск по инструкциям -> генерируем ответ через LLM -> сохраняем в историю.
         """
-        system_prompt = (
-            "Ты - ассистент для оптимизации поисковых запросов в техническую базу знаний. "
-            "Твоя задача: перефразировать входной текст пользователя так, как будто это сухой технический вопрос из документации. "
-            "Правила:\n"
-            "1. Убери все эмоции, вежливость ('пожалуйста', 'помогите'), личные местоимения ('я', 'мы').\n"
-            "2. Оставь только суть: название устройства, компонент и конкретную проблему/функцию.\n"
-            "3. Используй терминологию, характерную для инструкций (например, вместо 'не работает' пиши 'принцип работы', 'настройка', 'ошибка').\n"
-            "4. Верни ТОЛЬКО перефразированный запрос, без кавычек и пояснений."
-        )
 
-        user_prompt = (
-            f"Исходный запрос: {user_query}\nПерефразированный технический запрос:"
-        )
+        existing_answer = find_similar_letter(self.history_db, query)
+        if existing_answer:
+            return f"[Ответ из истории похожих писем]\n\n{existing_answer}"
 
         url = f"{self.base_url}/chat/completions"
         headers = {
@@ -161,13 +165,17 @@ class LLMPipeline:
 
         context_text = ""
         sources = set()
-        for i, doc in enumerate(results):
-            context_text += f"[Источник: {doc.metadata.get('source', 'Unknown')}]\n{doc.page_content}\n\n"
-            sources.add(doc.metadata.get("source", "Unknown"))
+        if results:
+            for i, doc in enumerate(results):
+                context_text += f"[Источник: {doc.metadata.get('source', 'Unknown')}]\n{doc.page_content}\n\n"
+                sources.add(doc.metadata.get("source", "Unknown"))
+
+        if not context_text:
+            return "Информация по вашему запросу не найдена ни в истории, ни в инструкциях."
 
         system_prompt = (
             "Ты - технический помощник. Твоя задача отвечать на вопросы ТОЛЬКО на основе предоставленного контекста из инструкций.\n"
-            "Не выдумывай факты. Ссылайся на название прибора, если оно известно из контекста. Не рассуждай, не пиши ничего лишнего. У тебя есть предоставленный контекст, бери информацию из него."
+            "Не выдумывай факты. Ссылайся на название прибора, если оно известно из контекста. Не рассуждай, не пиши ничего лишнего."
         )
 
         user_prompt = f"""Контекст из инструкций:
@@ -196,10 +204,15 @@ class LLMPipeline:
                     headers={"Authorization": f"Bearer {LLM_API_KEY}"},
                 )
                 resp.raise_for_status()
-                answer = resp.json()["choices"][0]["message"]["content"]
+                generated_answer = resp.json()["choices"][0]["message"]["content"]
 
-                answer += f"\n\nИспользованные файлы: {', '.join(sources)}"
-                return answer
+                final_answer = (
+                    f"{generated_answer}\n\nИспользованные файлы: {', '.join(sources)}"
+                )
+
+                save_letter_to_history(self.history_db, query, final_answer, message_id)
+
+                return final_answer
 
             except Exception as e:
                 return f"Ошибка при обращении к нейросети: {e}"

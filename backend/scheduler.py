@@ -6,10 +6,8 @@ import time
 from datetime import datetime
 from threading import Event
 
-
 from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.triggers.interval import IntervalTrigger
-
 
 import asyncio
 from mail_fetch import fetch_emails
@@ -18,17 +16,19 @@ from pydantic_models import RequestCreate
 from utils import parse_date_string
 import httpx
 
-
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 ATTACHMENTS_DIR = os.getenv("ATTACHMENTS_DIR", "attachments")
 CHECK_INTERVAL_MINUTES = int(os.getenv("CHECK_INTERVAL_MINUTES", "1"))
 
-
 shutdown_event = Event()
+logger = logging.getLogger("Scheduler")
 
 
 def process_single_letter(msg: dict):
     message_id = msg.get("message_id", "")
+    if not message_id:
+        logger.warning("Письмо без ID, пропускаем.")
+        return
 
     try:
         letter_text = f"От: {msg.get('sender_email', 'Unknown')}\n"
@@ -36,12 +36,14 @@ def process_single_letter(msg: dict):
         letter_text += f"Дата: {msg.get('date', '')}\n\n"
         letter_text += msg.get("text", "")
 
-        extracted_data = asyncio.run(LLMPipeline().extract_data(letter_text))
+        llm = LLMPipeline()
 
+        extracted_data = asyncio.run(llm.extract_data(letter_text))
         if not extracted_data:
+            logger.warning(f"Не удалось извлечь данные для {message_id}")
             return
 
-        llm_answer = asyncio.run(LLMPipeline().ask_rag(letter_text))
+        llm_answer = asyncio.run(llm.ask_rag(letter_text, message_id=message_id))
 
         payload = RequestCreate(
             date=extracted_data.get("date", ""),
@@ -62,39 +64,39 @@ def process_single_letter(msg: dict):
             url = f"{API_BASE_URL}/api/requests"
             response = client.post(url, json=payload.model_dump())
 
+            if response.status_code in [200, 201, 409]:
+                logger.info(f"Письмо {message_id} успешно обработано и сохранено.")
+            else:
+                logger.error(f"Ошибка API: {response.status_code} - {response.text}")
+
     except Exception as e:
-        pass
+        logger.error(f"Критическая ошибка обработки {message_id}: {e}", exc_info=True)
 
 
 def mail_fetch_job():
     if shutdown_event.is_set():
         return
-
+    logger.info("--- Запуск проверки почты ---")
     try:
         msgs = fetch_emails(limit=10, save_attachments_dir=ATTACHMENTS_DIR)
-        #  print(msgs)
         if not msgs:
+            logger.info("Новых писем нет.")
             return
 
         for msg in msgs:
             if shutdown_event.is_set():
                 break
-            print(msg)
             process_single_letter(msg)
-
     except Exception as e:
-        print(f"{e}")
+        logger.error(f"Ошибка в задаче: {e}", exc_info=True)
 
 
 def main():
-
     scheduler = BlockingScheduler()
-
     scheduler.add_job(
         mail_fetch_job,
         trigger=IntervalTrigger(minutes=CHECK_INTERVAL_MINUTES),
         id="mail_fetch_job",
-        name="Обработка почты",
         replace_existing=True,
         misfire_grace_time=60,
     )
@@ -112,7 +114,7 @@ def main():
     except (KeyboardInterrupt, SystemExit):
         pass
     finally:
-        print("stopped")
+        print("Scheduler stopped")
 
 
 if __name__ == "__main__":
