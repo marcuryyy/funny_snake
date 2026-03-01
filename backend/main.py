@@ -29,7 +29,6 @@ POSTGRES_HOSTNAME = os.getenv("POSTGRES_HOSTNAME", "postgres")
 POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
 
 
-
 async def get_filtered_requests(
     db_pool,
     full_name: Optional[str],
