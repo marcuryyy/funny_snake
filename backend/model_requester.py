@@ -5,6 +5,7 @@ import asyncio
 from typing import Optional, Dict, Any
 from cfg import *
 
+
 class LLMPipeline:
     def __init__(
         self,
@@ -109,8 +110,10 @@ class LLMPipeline:
             "3. Используй терминологию, характерную для инструкций (например, вместо 'не работает' пиши 'принцип работы', 'настройка', 'ошибка').\n"
             "4. Верни ТОЛЬКО перефразированный запрос, без кавычек и пояснений."
         )
-        
-        user_prompt = f"Исходный запрос: {user_query}\nПерефразированный технический запрос:"
+
+        user_prompt = (
+            f"Исходный запрос: {user_query}\nПерефразированный технический запрос:"
+        )
 
         url = f"{self.base_url}/chat/completions"
         headers = {
@@ -123,7 +126,7 @@ class LLMPipeline:
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
-            "temperature": 0.1, # Низкая температура для точности
+            "temperature": 0.1,
         }
 
         async with httpx.AsyncClient(timeout=httpx.Timeout(30.0)) as client:
@@ -132,8 +135,7 @@ class LLMPipeline:
                 response.raise_for_status()
                 data = response.json()
                 rewritten_query = data["choices"][0]["message"]["content"].strip()
-                
-                # Если модель вернула что-то странное,fallback на оригинал
+
                 if not rewritten_query:
                     return user_query
                 return rewritten_query
@@ -143,23 +145,19 @@ class LLMPipeline:
                 return user_query
 
     async def ask_rag(self, query: str, top_k: int = 3) -> str:
-        # 1. Сначала перефразируем запрос для лучшего поиска
-        optimized_query = await self.rewrite_query_for_rag(query)
-        print(f"🔍 Оригинальный запрос: {query}")
-        print(f"🔍 Оптимизированный запрос для RAG: {optimized_query}")
 
-        # 2. Ищем по оптимизированному запросу
+        optimized_query = await self.rewrite_query_for_rag(query)
+
         results = self._vector_db.similarity_search(optimized_query, k=top_k)
-        
+
         if not results:
-            # Если не нашли, пробуем поискать по оригинальному запросу на всякий случай
             results = self._vector_db.similarity_search(query, k=top_k)
-            
-        print("📄 Найдено документов:", len(results))
-        
+
+        print("Найдено документов:", len(results))
+
         if not results:
             return "Информация по вашему запросу не найдена в инструкциях."
-            
+
         context_text = ""
         sources = set()
         for i, doc in enumerate(results):
@@ -170,14 +168,14 @@ class LLMPipeline:
             "Ты - технический помощник. Твоя задача отвечать на вопросы ТОЛЬКО на основе предоставленного контекста из инструкций.\n"
             "Не выдумывай факты. Ссылайся на название прибора, если оно известно из контекста. Не рассуждай, не пиши ничего лишнего. У тебя есть предоставленный контекст, бери информацию из него."
         )
-        
+
         user_prompt = f"""Контекст из инструкций:
         {context_text}
         
         Вопрос пользователя: {query}
 
         Ответ:"""
-        
+
         payload = {
             "model": self.model,
             "messages": [
@@ -187,7 +185,7 @@ class LLMPipeline:
             "temperature": 0.3,
         }
         url = f"{self.base_url}/chat/completions"
-        
+
         async with httpx.AsyncClient(timeout=httpx.Timeout(self.timeout)) as client:
             try:
                 resp = await client.post(
