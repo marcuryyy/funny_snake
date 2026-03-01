@@ -145,7 +145,7 @@ app.add_middleware(
 @app.get("/api/requests", response_model=List[RequestResponse])
 async def get_requests(
     page: int = Query(1, ge=1),
-    limit: int = Query(10, ge=1, le=100),
+    limit: int = Query(10, ge=1, le=1000),
     full_name: Optional[str] = Query(None),
     object_name: Optional[str] = Query(None),
     phone: Optional[str] = Query(None),
