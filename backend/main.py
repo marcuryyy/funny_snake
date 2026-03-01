@@ -86,6 +86,7 @@ async def get_filtered_requests(
     issue: Optional[str],
     date_from: Optional[str],
     date_to: Optional[str],
+    task_status: Optional[str],
     limit: Optional[int] = None,
     offset: Optional[int] = None,
 ) -> List[RequestResponse]:
@@ -105,11 +106,12 @@ async def get_filtered_requests(
         f"%{issue}%" if issue else None,
         parsed_date_from,
         parsed_date_to,
+        task_status.upper() if task_status else None,
     ]
 
     async with db_pool.acquire() as conn:
         base_query = """
-            SELECT * FROM requests 
+            SELECT * FROM requests
             WHERE ($1::text IS NULL OR LOWER(full_name) LIKE LOWER($1))
               AND ($2::text IS NULL OR LOWER(object_name) LIKE LOWER($2))
               AND ($3::text IS NULL OR phone ILIKE $3)
@@ -118,10 +120,11 @@ async def get_filtered_requests(
               AND ($6::text IS NULL OR LOWER(question_summary) LIKE LOWER($6))
               AND ($7::date IS NULL OR req_date >= $7)
               AND ($8::date IS NULL OR req_date <= $8)
+              AND ($9::text IS NULL OR task_status = $9::task_statuses)
         """
 
         if limit is not None and offset is not None:
-            base_query += " ORDER BY request_id ASC LIMIT $9 OFFSET $10"
+            base_query += " ORDER BY request_id ASC LIMIT $10 OFFSET $11"
             params.extend([limit, offset])
         else:
             base_query += " ORDER BY request_id ASC"
@@ -195,6 +198,7 @@ async def get_requests(
     issue: Optional[str] = Query(None),
     date_from: Optional[str] = Query(None),
     date_to: Optional[str] = Query(None),
+    task_status: Optional[str] = Query(None),
 ):
     """Получить список запросов с фильтрами и пагинацией"""
     offset = (page - 1) * limit
@@ -209,6 +213,7 @@ async def get_requests(
         issue=issue,
         date_from=date_from,
         date_to=date_to,
+        task_status=task_status,
         limit=limit,
         offset=offset,
     )
@@ -226,10 +231,10 @@ async def create_request(request_data: RequestCreate):
 
     async with db_pool.acquire() as conn:
         query = """
-            INSERT INTO requests 
-            (req_date, full_name, object_name, phone, email, factory_number, device_type, emotion, question_summary, llm_answer)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-            RETURNING request_id, req_date, full_name, object_name, phone, email, factory_number, device_type, emotion, question_summary, llm_answer
+            INSERT INTO requests
+            (req_date, full_name, object_name, phone, email, factory_number, device_type, emotion, question_summary, llm_answer, task_status, message_id)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            RETURNING request_id
         """
         row = await conn.fetchrow(
             query,
@@ -242,7 +247,9 @@ async def create_request(request_data: RequestCreate):
             request_data.deviceType,
             request_data.emotion,
             request_data.issue,
-            request_data.llm_answer
+            request_data.llm_answer,
+            request_data.task_status or "OPEN",
+            request_data.message_id or ""
         )
 
         return AddNewRow(id=row["request_id"])
@@ -286,6 +293,7 @@ async def get_table_csv(
     issue: Optional[str] = Query(None),
     date_from: Optional[str] = Query(None),
     date_to: Optional[str] = Query(None),
+    task_status: Optional[str] = Query(None),
 ):
     """Экспорт отфильтрованных запросов в CSV"""
     db_pool = app.state.db_pool
@@ -315,6 +323,7 @@ async def get_table_csv(
                     issue=issue,
                     date_from=date_from,
                     date_to=date_to,
+                    task_status=task_status,
                     limit=batch_size,
                     offset=offset,
                 )
@@ -358,6 +367,7 @@ async def get_table_excel(
     issue: Optional[str] = Query(None),
     date_from: Optional[str] = Query(None),
     date_to: Optional[str] = Query(None),
+    task_status: Optional[str] = Query(None),
 ):
     """Экспорт отфильтрованных запросов в Excel"""
     db_pool = app.state.db_pool
@@ -369,10 +379,10 @@ async def get_table_excel(
     ws.title = "Requests"
 
     headers = list(RequestResponse.model_fields.keys())
-    
+
     header_font = Font(bold=True, color="FFFFFF")
     header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
-    
+
     for col, header in enumerate(headers, 1):
         cell = ws.cell(row=1, column=col, value=header)
         cell.font = header_font
@@ -389,6 +399,7 @@ async def get_table_excel(
             full_name=full_name, object_name=object_name, phone=phone,
             email=email, emotion=emotion, issue=issue,
             date_from=date_from, date_to=date_to,
+            task_status=task_status,
             limit=batch_size, offset=offset,
         )
 

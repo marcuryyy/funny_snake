@@ -1,12 +1,14 @@
 import { NavLink } from 'react-router-dom';
 import { Mail, BarChart3 } from 'lucide-react';
+import logo from '../assets/logo.svg';
 import './Sidebar.css';
 
 function Sidebar() {
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
-        <h1>📬 Support AI</h1>
+        <img src={logo} alt="Эрис" className="logo" />
+        <h1>Эрис Support</h1>
         <p>Система обработки обращений</p>
       </div>
 
@@ -27,10 +29,10 @@ function Sidebar() {
 
       <div className="sidebar-footer">
         <div className="user-info">
-          <div className="avatar">👤</div>
+          <div className="avatar"></div>
           <div>
             <p className="user-name">Оператор</p>
-            <p className="user-status">🟢 Онлайн</p>
+            <p className="user-status">Онлайн</p>
           </div>
         </div>
       </div>

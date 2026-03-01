@@ -1,31 +1,79 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './TicketDetail.css';
 
-function TicketDetail({ ticket, onClose }) {
-  const [response, setResponse] = useState('');
-  const [sending, setSending] = useState(false);
+const API_URL = 'http://localhost:8000/api/sendMail';
 
-  const handleSendResponse = async () => {
-    if (!response.trim()) {
-      alert('Введите текст ответа');
+function TicketDetail({ ticket, onClose }) {
+  const [subject, setSubject] = useState('');
+  const [body, setBody] = useState('');
+  const [sending, setSending] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [taskStatus, setTaskStatus] = useState(ticket.task_status || 'OPEN');
+
+  useEffect(() => {
+    const defaultSubject = `Ответ на обращение: ${ticket.issue.substring(0, 50)}${ticket.issue.length > 50 ? '...' : ''}`;
+    setSubject(defaultSubject);
+    setBody(ticket.llm_answer || '');
+    setTaskStatus(ticket.task_status || 'OPEN');
+    setLoading(false);
+  }, [ticket]);
+
+  const handleSendMail = async () => {
+    if (!subject.trim()) {
+      alert('Введите тему письма');
+      return;
+    }
+    if (!body.trim()) {
+      alert('Введите текст письма');
+      return;
+    }
+    if (!ticket.email) {
+      alert('У клиента не указан email');
       return;
     }
 
     setSending(true);
     try {
-      // Здесь будет отправка ответа через API
-      // Пока просто имитируем отправку
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      alert(`Ответ отправлен клиенту ${ticket.fullName}`);
-      setResponse('');
+      const requestBody = {
+        to_emails: [ticket.email],
+        subject,
+        body,
+      };
+      
+      if (ticket.message_id) {
+        requestBody.message_id = ticket.message_id;
+      }
+
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `Ошибка HTTP: ${response.status}`);
+      }
+
+      alert('Письмо отправлено');
       onClose();
     } catch (error) {
-      console.error('Ошибка отправки ответа:', error);
-      alert('Ошибка при отправке ответа');
+      console.error('Ошибка отправки письма:', error);
+      alert(`Ошибка при отправке: ${error.message}`);
     } finally {
       setSending(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="ticket-detail-overlay" onClick={onClose}>
+        <div className="ticket-detail">Загрузка...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="ticket-detail-overlay" onClick={onClose}>
@@ -33,7 +81,7 @@ function TicketDetail({ ticket, onClose }) {
         <div className="ticket-detail-header">
           <h2>Обращение #{ticket.id}</h2>
           <button className="btn-close" onClick={onClose} disabled={sending}>
-            ✕
+            Закрыть
           </button>
         </div>
 
@@ -59,12 +107,23 @@ function TicketDetail({ ticket, onClose }) {
             <span>{ticket.deviceType}</span>
           </div>
           <div className="info-item">
-            <label>Серийный номер:</label>
+            <label>Заводской номер:</label>
             <span>{ticket.factoryNumber || '—'}</span>
           </div>
           <div className="info-item">
             <label>Эмоция:</label>
             <span className="emotion-badge-detail">{ticket.emotion}</span>
+          </div>
+          <div className="info-item">
+            <label>Статус:</label>
+            <select
+              value={taskStatus}
+              onChange={(e) => setTaskStatus(e.target.value)}
+              className="status-select"
+            >
+              <option value="OPEN">Открыто</option>
+              <option value="CLOSED">Закрыто</option>
+            </select>
           </div>
           <div className="info-item">
             <label>Дата:</label>
@@ -76,26 +135,45 @@ function TicketDetail({ ticket, onClose }) {
           </div>
         </div>
 
-        <div className="response-section">
-          <h3>📝 Ответ клиенту</h3>
-          <textarea
-            value={response}
-            onChange={(e) => setResponse(e.target.value)}
-            placeholder="Введите ответ клиенту..."
-            rows={6}
-            className="response-textarea"
-            disabled={sending}
-          />
+        <div className="mail-section">
+          <h3>Ответ на обращение</h3>
+          
+          <div className="form-group">
+            <label htmlFor="subject">Тема письма</label>
+            <input
+              type="text"
+              id="subject"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              placeholder="Тема письма"
+              className="input-field"
+              disabled={sending}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="body">Текст письма</label>
+            <textarea
+              id="body"
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              placeholder="Текст письма..."
+              rows={10}
+              className="textarea-field"
+              disabled={sending}
+            />
+          </div>
+
           <div className="action-buttons">
-            <button 
-              className="btn-send" 
-              onClick={handleSendResponse}
-              disabled={sending || !response.trim()}
+            <button
+              className="btn-send"
+              onClick={handleSendMail}
+              disabled={sending || !subject.trim() || !body.trim()}
             >
-              {sending ? '⏳ Отправка...' : '✉️ Отправить ответ'}
+              {sending ? 'Отправка...' : 'Отправить письмо'}
             </button>
-            <button 
-              className="btn-secondary" 
+            <button
+              className="btn-secondary"
               onClick={onClose}
               disabled={sending}
             >

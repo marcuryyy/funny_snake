@@ -15,7 +15,7 @@ class EmailRequest(BaseModel):
     body: str = Field(..., min_length=1, max_length=5000)
     html_body: Optional[str] = Field(None, max_length=10000)
     from_email: Optional[str] = Field(None)
-    message_id: Optional[str]
+    message_id: Optional[str] = Field(None)
 
 class RequestBase(BaseModel):
     date: str
@@ -31,8 +31,19 @@ class RequestBase(BaseModel):
     message_id: str
 
 
-class RequestCreate(RequestBase):
-    pass
+class RequestCreate(BaseModel):
+    date: str
+    fullName: str
+    object: str
+    phone: Optional[str] = ""
+    email: Optional[str] = ""
+    factoryNumber: Optional[str] = ""
+    deviceType: Optional[str] = ""
+    emotion: str
+    issue: str
+    llm_answer: Optional[str] = ""
+    message_id: Optional[str] = ""
+    task_status: Optional[str] = "OPEN"
 
 
 class RequestResponse(RequestBase):
