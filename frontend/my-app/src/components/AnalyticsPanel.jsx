@@ -28,9 +28,13 @@ function AnalyticsPanel() {
     try {
       setLoading(true);
       setError(null);
-      const headers = { ...getAuthHeaders() };
+      const authHeaders = getAuthHeaders();
+      const headers = {
+        'Content-Type': 'application/json',
+        ...authHeaders,
+      };
       const response = await fetch(`${API_URL}?page=1&limit=1000`, { headers });
-      
+
       if (!response.ok) {
         if (response.status === 401) {
           window.location.href = '/login';
