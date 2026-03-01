@@ -20,6 +20,7 @@ from pydantic_models import (
     FetchedMailsResponse,
     EmailRequest,
 )
+from utils import parse_date_string, date_to_str
 
 POSTGRES_DB_NAME = os.getenv("POSTGRES_DB", "postgres")
 POSTGRES_DB_USER = os.getenv("POSTGRES_USER", "postgres")
@@ -27,53 +28,6 @@ POSTGRES_DB_PASS = os.getenv("POSTGRES_PASSWORD", "postgres")
 POSTGRES_HOSTNAME = os.getenv("POSTGRES_HOSTNAME", "postgres")
 POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
 
-
-def date_to_str(
-    date_obj: Optional[Union[date, datetime, str]],
-) -> str:
-    """
-    Конвертирует объект даты в строку формата 'YYYY-MM-DD'.
-
-    Args:
-        date_obj: Объект date, datetime или строка.
-
-    Returns:
-        Строка в формате 'YYYY-MM-DD'. Если вход None или пустой, возвращает текущую дату.
-    """
-    if date_obj is None or date_obj == "":
-        return date.today().isoformat()
-
-    if isinstance(date_obj, str):
-        return date_obj
-
-    if isinstance(date_obj, (date, datetime)):
-        return date_obj.strftime("%Y-%m-%d")
-
-    return str(date_obj)
-
-
-def parse_date_string(date_str: str) -> date:
-    """Парсит строку даты в объект date."""
-    if not date_str:
-        return date.today()
-
-    date_str = str(date_str).strip()
-
-    formats = [
-        "%d.%m.%Y",
-        "%Y-%m-%d",
-        "%d/%m/%Y",
-        "%Y/%m/%d",
-        "%d.%m.%y",
-    ]
-
-    for fmt in formats:
-        try:
-            return datetime.strptime(date_str, fmt).date()
-        except ValueError:
-            continue
-
-    return date.today()
 
 
 async def get_filtered_requests(

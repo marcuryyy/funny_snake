@@ -15,11 +15,11 @@ EMAIL_USER = os.getenv("IMAP_EMAIL", "")
 EMAIL_PASS = os.getenv("EXTERNAL_PASS", "")
 API_BASE_URL = "http://localhost:8000"
 API_ENDPOINT = "/api/requests"
+llm = LLMPipeline()
 
 
 async def process_letter(letter_text: str, message_id: str):
-
-    llm = LLMPipeline()
+    global llm
 
     extracted_data = await llm.extract_data(letter_text)
     llm_answer = await llm.ask_rag(letter_text)
