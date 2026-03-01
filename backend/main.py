@@ -120,7 +120,7 @@ async def get_filtered_requests(
               AND ($6::text IS NULL OR LOWER(question_summary) LIKE LOWER($6))
               AND ($7::date IS NULL OR req_date >= $7)
               AND ($8::date IS NULL OR req_date <= $8)
-              AND ($9::text IS NULL OR task_status = $9)
+              AND ($9::text IS NULL OR task_status = $9::task_statuses)
         """
 
         if limit is not None and offset is not None:
