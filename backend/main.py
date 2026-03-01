@@ -1,14 +1,17 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, Query, Response
+from fastapi import Depends, FastAPI, HTTPException, Query, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from datetime import date, datetime
 import csv
 import io
-from typing import Optional, List, Union
+from typing import Annotated, Optional, List, Union
+
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from mail_fetch import fetch_emails
 from mail_sending import send_email
 import asyncpg
+import bcrypt
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill
 import os
@@ -20,6 +23,7 @@ from pydantic_models import (
     FetchedMailsResponse,
     EmailRequest,
 )
+from utils import parse_date_string, date_to_str
 
 POSTGRES_DB_NAME = os.getenv("POSTGRES_DB", "postgres")
 POSTGRES_DB_USER = os.getenv("POSTGRES_USER", "postgres")
@@ -27,53 +31,6 @@ POSTGRES_DB_PASS = os.getenv("POSTGRES_PASSWORD", "postgres")
 POSTGRES_HOSTNAME = os.getenv("POSTGRES_HOSTNAME", "postgres")
 POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
 
-
-def date_to_str(
-    date_obj: Optional[Union[date, datetime, str]],
-) -> str:
-    """
-    Конвертирует объект даты в строку формата 'YYYY-MM-DD'.
-
-    Args:
-        date_obj: Объект date, datetime или строка.
-
-    Returns:
-        Строка в формате 'YYYY-MM-DD'. Если вход None или пустой, возвращает текущую дату.
-    """
-    if date_obj is None or date_obj == "":
-        return date.today().isoformat()
-
-    if isinstance(date_obj, str):
-        return date_obj
-
-    if isinstance(date_obj, (date, datetime)):
-        return date_obj.strftime("%Y-%m-%d")
-
-    return str(date_obj)
-
-
-def parse_date_string(date_str: str) -> date:
-    """Парсит строку даты в объект date."""
-    if not date_str:
-        return date.today()
-
-    date_str = str(date_str).strip()
-
-    formats = [
-        "%d.%m.%Y",
-        "%Y-%m-%d",
-        "%d/%m/%Y",
-        "%Y/%m/%d",
-        "%d.%m.%y",
-    ]
-
-    for fmt in formats:
-        try:
-            return datetime.strptime(date_str, fmt).date()
-        except ValueError:
-            continue
-
-    return date.today()
 
 
 async def get_filtered_requests(
@@ -462,6 +419,55 @@ async def get_table_excel(
         },
     )
 
+security = HTTPBasic()
+
+async def get_db_pool():
+    """Получаем пул соединений из app.state"""
+    if not app.state.db_pool:
+        raise HTTPException(status_code=503, detail="Database not ready")
+    return app.state.db_pool
+
+async def get_current_username(
+    credentials: Annotated[HTTPBasicCredentials, Depends(security)],
+    db_pool=Depends(get_db_pool)
+):
+    """Проверяет пользователя в PostgreSQL"""
+    
+    async with db_pool.acquire() as conn:
+        row = await conn.fetchrow(
+            "SELECT id, login, password_hash FROM users WHERE login = $1 AND is_active = true",
+            credentials.username
+        )
+        
+        if not row:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Неверный логин или пароль",
+                headers={"WWW-Authenticate": "Basic"},
+            )
+        
+        print("Пользователь найден")
+
+        current_password_bytes = credentials.password.encode("utf8")
+        stored_password_bytes = row['password_hash'].encode("utf8")
+        
+        is_correct_password = bcrypt.checkpw(
+            current_password_bytes, 
+            stored_password_bytes
+        )
+        
+        if not is_correct_password:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Неверный логин или пароль",
+                headers={"WWW-Authenticate": "Basic"},
+            )
+        
+        return row['login']
+
+@app.get("/users/me")
+def read_current_user(username: Annotated[str, Depends(get_current_username)]):
+    return {"username": username}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
