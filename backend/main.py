@@ -32,7 +32,6 @@ POSTGRES_HOSTNAME = os.getenv("POSTGRES_HOSTNAME", "postgres")
 POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
 
 
-
 async def get_filtered_requests(
     db_pool,
     full_name: Optional[str],
@@ -146,7 +145,7 @@ app.add_middleware(
 @app.get("/api/requests", response_model=List[RequestResponse])
 async def get_requests(
     page: int = Query(1, ge=1),
-    limit: int = Query(10, ge=1, le=100),
+    limit: int = Query(10, ge=1, le=1000),
     full_name: Optional[str] = Query(None),
     object_name: Optional[str] = Query(None),
     phone: Optional[str] = Query(None),
@@ -230,10 +229,37 @@ async def send_mail_endpoint(request: EmailRequest):
         reply_to_thread=True,
     )
 
+    db_pool = app.state.db_pool
+
     if success:
+        try:
+            async with db_pool.acquire() as conn:
+                result = await conn.execute(
+                    """
+                    UPDATE requests 
+                    SET task_status = 'CLOSED'::task_statuses 
+                    WHERE message_id = $1
+                    """,
+                    request.message_id,
+                )
+
+                rows_affected = result.split()[-1]
+
+                if int(rows_affected) == 0:
+                    import logging
+
+                    logging.warning(
+                        f"Письмо отправлено, но запись с message_id {request.message_id} не найдена в БД для обновления статуса."
+                    )
+
+        except Exception as e:
+            import logging
+
+            logging.error(f"Ошибка при обновлении статуса задачи в БД: {e}")
+
         return {
             "status": "success",
-            "message": f"Email отправлен на {len(request.to_emails)} адресов",
+            "message": f"Email отправлен на {len(request.to_emails)} адресов, статус задачи обновлен на CLOSED",
             "recipients": request.to_emails,
         }
     else:
@@ -419,7 +445,9 @@ async def get_table_excel(
         },
     )
 
+
 security = HTTPBasic()
+
 
 async def get_db_pool():
     """Получаем пул соединений из app.state"""
@@ -427,47 +455,49 @@ async def get_db_pool():
         raise HTTPException(status_code=503, detail="Database not ready")
     return app.state.db_pool
 
+
 async def get_current_username(
     credentials: Annotated[HTTPBasicCredentials, Depends(security)],
-    db_pool=Depends(get_db_pool)
+    db_pool=Depends(get_db_pool),
 ):
     """Проверяет пользователя в PostgreSQL"""
-    
+
     async with db_pool.acquire() as conn:
         row = await conn.fetchrow(
             "SELECT id, login, password_hash FROM users WHERE login = $1 AND is_active = true",
-            credentials.username
+            credentials.username,
         )
-        
+
         if not row:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Неверный логин или пароль",
                 headers={"WWW-Authenticate": "Basic"},
             )
-        
+
         print("Пользователь найден")
 
         current_password_bytes = credentials.password.encode("utf8")
-        stored_password_bytes = row['password_hash'].encode("utf8")
-        
+        stored_password_bytes = row["password_hash"].encode("utf8")
+
         is_correct_password = bcrypt.checkpw(
-            current_password_bytes, 
-            stored_password_bytes
+            current_password_bytes, stored_password_bytes
         )
-        
+
         if not is_correct_password:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Неверный логин или пароль",
                 headers={"WWW-Authenticate": "Basic"},
             )
-        
-        return row['login']
+
+        return row["login"]
+
 
 @app.get("/users/me")
 def read_current_user(username: Annotated[str, Depends(get_current_username)]):
     return {"username": username}
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

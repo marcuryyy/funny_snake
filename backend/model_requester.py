@@ -127,6 +127,7 @@ class LLMPipeline:
                 {"role": "user", "content": user_prompt},
             ],
             "temperature": 0.1,
+            "max_tokens": 256,
         }
 
         async with httpx.AsyncClient(timeout=httpx.Timeout(30.0)) as client:
@@ -183,6 +184,7 @@ class LLMPipeline:
                 {"role": "user", "content": user_prompt},
             ],
             "temperature": 0.3,
+            "max_tokens": 256,
         }
         url = f"{self.base_url}/chat/completions"
 

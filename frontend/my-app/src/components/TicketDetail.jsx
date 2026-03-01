@@ -3,20 +3,41 @@ import './TicketDetail.css';
 
 const API_URL = 'http://localhost:8000/api/sendMail';
 
-function TicketDetail({ ticket, onClose }) {
+const STATUS_OPEN = 'OPEN';
+const STATUS_IN_PROGRESS = 'IN_PROGRESS';
+const STATUS_CLOSED = 'CLOSED';
+
+const statusLabels = {
+  [STATUS_OPEN]: 'Открыто',
+  [STATUS_IN_PROGRESS]: 'В работе',
+  [STATUS_CLOSED]: 'Закрыто',
+};
+
+function TicketDetail({ ticket, onClose, onStatusChange }) {
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [taskStatus, setTaskStatus] = useState(ticket.task_status || 'OPEN');
+  const [taskStatus, setTaskStatus] = useState(ticket.task_status || STATUS_OPEN);
+  const [hasSentAnswer, setHasSentAnswer] = useState(false);
 
   useEffect(() => {
     const defaultSubject = `Ответ на обращение: ${ticket.issue.substring(0, 50)}${ticket.issue.length > 50 ? '...' : ''}`;
     setSubject(defaultSubject);
     setBody(ticket.llm_answer || '');
-    setTaskStatus(ticket.task_status || 'OPEN');
+    const initialStatus = ticket.task_status || STATUS_OPEN;
+    setTaskStatus(initialStatus);
+    
+    // Если тикет уже закрыт, помечаем что ответ был отправлен
+    if (initialStatus === STATUS_CLOSED) {
+      setHasSentAnswer(true);
+    }
+    
     setLoading(false);
   }, [ticket]);
+
+  const isClosed = taskStatus === STATUS_CLOSED;
+  const isReadOnly = isClosed;
 
   const handleSendMail = async () => {
     if (!subject.trim()) {
@@ -39,7 +60,7 @@ function TicketDetail({ ticket, onClose }) {
         subject,
         body,
       };
-      
+
       if (ticket.message_id) {
         requestBody.message_id = ticket.message_id;
       }
@@ -57,6 +78,13 @@ function TicketDetail({ ticket, onClose }) {
         throw new Error(errorData.detail || `Ошибка HTTP: ${response.status}`);
       }
 
+      // После отправки меняем статус на CLOSED
+      setTaskStatus(STATUS_CLOSED);
+      setHasSentAnswer(true);
+      if (onStatusChange) {
+        onStatusChange(ticket.id, STATUS_CLOSED);
+      }
+      
       alert('Письмо отправлено');
       onClose();
     } catch (error) {
@@ -64,6 +92,25 @@ function TicketDetail({ ticket, onClose }) {
       alert(`Ошибка при отправке: ${error.message}`);
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleClose = () => {
+    // Если закрыли без отправки ответа и тикет был в работе, возвращаем в OPEN
+    if (!hasSentAnswer && taskStatus === STATUS_IN_PROGRESS) {
+      setTaskStatus(STATUS_OPEN);
+      if (onStatusChange) {
+        onStatusChange(ticket.id, STATUS_OPEN);
+      }
+    }
+    onClose();
+  };
+
+  const handleStatusChange = (e) => {
+    const newStatus = e.target.value;
+    setTaskStatus(newStatus);
+    if (onStatusChange) {
+      onStatusChange(ticket.id, newStatus);
     }
   };
 
@@ -76,11 +123,11 @@ function TicketDetail({ ticket, onClose }) {
   }
 
   return (
-    <div className="ticket-detail-overlay" onClick={onClose}>
+    <div className="ticket-detail-overlay" onClick={handleClose}>
       <div className="ticket-detail" onClick={(e) => e.stopPropagation()}>
         <div className="ticket-detail-header">
           <h2>Обращение #{ticket.id}</h2>
-          <button className="btn-close" onClick={onClose} disabled={sending}>
+          <button className="btn-close" onClick={handleClose} disabled={sending}>
             Закрыть
           </button>
         </div>
@@ -118,11 +165,13 @@ function TicketDetail({ ticket, onClose }) {
             <label>Статус:</label>
             <select
               value={taskStatus}
-              onChange={(e) => setTaskStatus(e.target.value)}
+              onChange={handleStatusChange}
               className="status-select"
+              disabled={isReadOnly}
             >
-              <option value="OPEN">Открыто</option>
-              <option value="CLOSED">Закрыто</option>
+              <option value={STATUS_OPEN}>{statusLabels[STATUS_OPEN]}</option>
+              <option value={STATUS_IN_PROGRESS}>{statusLabels[STATUS_IN_PROGRESS]}</option>
+              <option value={STATUS_CLOSED}>{statusLabels[STATUS_CLOSED]}</option>
             </select>
           </div>
           <div className="info-item">
@@ -137,7 +186,13 @@ function TicketDetail({ ticket, onClose }) {
 
         <div className="mail-section">
           <h3>Ответ на обращение</h3>
-          
+
+          {isReadOnly && (
+            <div className="readonly-notice">
+              Обращение закрыто. Изменения недоступны.
+            </div>
+          )}
+
           <div className="form-group">
             <label htmlFor="subject">Тема письма</label>
             <input
@@ -147,7 +202,7 @@ function TicketDetail({ ticket, onClose }) {
               onChange={(e) => setSubject(e.target.value)}
               placeholder="Тема письма"
               className="input-field"
-              disabled={sending}
+              disabled={sending || isReadOnly}
             />
           </div>
 
@@ -160,7 +215,7 @@ function TicketDetail({ ticket, onClose }) {
               placeholder="Текст письма..."
               rows={10}
               className="textarea-field"
-              disabled={sending}
+              disabled={sending || isReadOnly}
             />
           </div>
 
@@ -168,13 +223,13 @@ function TicketDetail({ ticket, onClose }) {
             <button
               className="btn-send"
               onClick={handleSendMail}
-              disabled={sending || !subject.trim() || !body.trim()}
+              disabled={sending || !subject.trim() || !body.trim() || isReadOnly}
             >
               {sending ? 'Отправка...' : 'Отправить письмо'}
             </button>
             <button
               className="btn-secondary"
-              onClick={onClose}
+              onClick={handleClose}
               disabled={sending}
             >
               Закрыть

@@ -5,3 +5,5 @@ backend/__pycache__
 backend/output
 backend/instructions_pdf
 backend/chroma_db
+ds_scripts/sample_tickets.json
+ds_scripts/ticket_responses.json
