@@ -276,6 +276,11 @@
   color: #2e7d32;
 }
 
+.status-in_progress {
+  background: #fff3e0;
+  color: #e65100;
+}
+
 .status-closed {
   background: #ffebee;
   color: #c62828;

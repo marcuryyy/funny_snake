@@ -119,8 +119,49 @@ class LLMPipeline:
         if existing_answer:
             return f"[Ответ из истории похожих писем]\n\n{existing_answer}"
 
-        logger.info("Похожих писем не найдено. Выполняем RAG поиск по инструкциям...")
-        results = self.rag_db.similarity_search(query, k=3)
+        url = f"{self.base_url}/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
+        payload = {
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            "temperature": 0.1,
+            "max_tokens": 256,
+        }
+
+        async with httpx.AsyncClient(timeout=httpx.Timeout(30.0)) as client:
+            try:
+                response = await client.post(url, json=payload, headers=headers)
+                response.raise_for_status()
+                data = response.json()
+                rewritten_query = data["choices"][0]["message"]["content"].strip()
+
+                if not rewritten_query:
+                    return user_query
+                return rewritten_query
+
+            except Exception as e:
+                print(f"Ошибка при перефразировании запроса: {e}. Используем оригинал.")
+                return user_query
+
+    async def ask_rag(self, query: str, top_k: int = 3) -> str:
+
+        optimized_query = await self.rewrite_query_for_rag(query)
+
+        results = self._vector_db.similarity_search(optimized_query, k=top_k)
+
+        if not results:
+            results = self._vector_db.similarity_search(query, k=top_k)
+
+        print("Найдено документов:", len(results))
+
+        if not results:
+            return "Информация по вашему запросу не найдена в инструкциях."
 
         context_text = ""
         sources = set()
@@ -150,7 +191,8 @@ class LLMPipeline:
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
-            "temperature": 0.2,
+            "temperature": 0.3,
+            "max_tokens": 256,
         }
         url = f"{self.base_url}/chat/completions"
 

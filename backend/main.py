@@ -1,14 +1,17 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, Query, Response
+from fastapi import Depends, FastAPI, HTTPException, Query, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from datetime import date, datetime
 import csv
 import io
-from typing import Optional, List, Union
+from typing import Annotated, Optional, List, Union
+
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from mail_fetch import fetch_emails
 from mail_sending import send_email
 import asyncpg
+import bcrypt
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill
 import os
@@ -142,7 +145,7 @@ app.add_middleware(
 @app.get("/api/requests", response_model=List[RequestResponse])
 async def get_requests(
     page: int = Query(1, ge=1),
-    limit: int = Query(10, ge=1, le=100),
+    limit: int = Query(10, ge=1, le=1000),
     full_name: Optional[str] = Query(None),
     object_name: Optional[str] = Query(None),
     phone: Optional[str] = Query(None),
@@ -226,10 +229,37 @@ async def send_mail_endpoint(request: EmailRequest):
         reply_to_thread=True,
     )
 
+    db_pool = app.state.db_pool
+
     if success:
+        try:
+            async with db_pool.acquire() as conn:
+                result = await conn.execute(
+                    """
+                    UPDATE requests 
+                    SET task_status = 'CLOSED'::task_statuses 
+                    WHERE message_id = $1
+                    """,
+                    request.message_id,
+                )
+
+                rows_affected = result.split()[-1]
+
+                if int(rows_affected) == 0:
+                    import logging
+
+                    logging.warning(
+                        f"Письмо отправлено, но запись с message_id {request.message_id} не найдена в БД для обновления статуса."
+                    )
+
+        except Exception as e:
+            import logging
+
+            logging.error(f"Ошибка при обновлении статуса задачи в БД: {e}")
+
         return {
             "status": "success",
-            "message": f"Email отправлен на {len(request.to_emails)} адресов",
+            "message": f"Email отправлен на {len(request.to_emails)} адресов, статус задачи обновлен на CLOSED",
             "recipients": request.to_emails,
         }
     else:
@@ -414,6 +444,59 @@ async def get_table_excel(
             "Content-Disposition": f'attachment; filename="{filename}"',
         },
     )
+
+
+security = HTTPBasic()
+
+
+async def get_db_pool():
+    """Получаем пул соединений из app.state"""
+    if not app.state.db_pool:
+        raise HTTPException(status_code=503, detail="Database not ready")
+    return app.state.db_pool
+
+
+async def get_current_username(
+    credentials: Annotated[HTTPBasicCredentials, Depends(security)],
+    db_pool=Depends(get_db_pool),
+):
+    """Проверяет пользователя в PostgreSQL"""
+
+    async with db_pool.acquire() as conn:
+        row = await conn.fetchrow(
+            "SELECT id, login, password_hash FROM users WHERE login = $1 AND is_active = true",
+            credentials.username,
+        )
+
+        if not row:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Неверный логин или пароль",
+                headers={"WWW-Authenticate": "Basic"},
+            )
+
+        print("Пользователь найден")
+
+        current_password_bytes = credentials.password.encode("utf8")
+        stored_password_bytes = row["password_hash"].encode("utf8")
+
+        is_correct_password = bcrypt.checkpw(
+            current_password_bytes, stored_password_bytes
+        )
+
+        if not is_correct_password:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Неверный логин или пароль",
+                headers={"WWW-Authenticate": "Basic"},
+            )
+
+        return row["login"]
+
+
+@app.get("/users/me")
+def read_current_user(username: Annotated[str, Depends(get_current_username)]):
+    return {"username": username}
 
 
 if __name__ == "__main__":

@@ -8,3 +8,5 @@ backend/chroma_db
 backend/chroma_db_history
 backend/.ruff_cache
 .ruff_cache
+ds_scripts/sample_tickets.json
+ds_scripts/ticket_responses.json
