@@ -1,6 +1,7 @@
 import imaplib
 import email
 from email.header import decode_header
+from email.utils import parseaddr
 from bs4 import BeautifulSoup
 import os
 from dotenv import load_dotenv
@@ -48,7 +49,6 @@ def get_body(msg):
                         errors="ignore",
                     )
                 )
-            print(ctype)
 
         if text_parts:
             return "\n".join(text_parts).strip()
@@ -57,7 +57,6 @@ def get_body(msg):
             return soup.get_text("\n").strip()
         return ""
     else:
-        print("Message is not multipart")
         payload = msg.get_payload(decode=True)
         if not payload:
             return ""
@@ -97,7 +96,6 @@ def get_attachments(msg, save_dir=None):
 def fetch_emails(limit=None, save_attachments_dir=None):
     mail = imaplib.IMAP4_SSL(IMAP_SERVER)
     mail.login(EMAIL_USER, EMAIL_PASS)
-    print("success")
     mail.select("INBOX")
 
     status, data = mail.search(None, "ALL")
@@ -117,19 +115,27 @@ def fetch_emails(limit=None, save_attachments_dir=None):
 
         raw = msg_data[0][1]
         msg = email.message_from_bytes(raw)
-
+        _, sender_email = parseaddr(msg.get("From", ""))
+        date_raw = msg.get("Date", "")
+        try:
+            date_formatted = email.utils.format_datetime(
+                email.utils.parsedate_to_datetime(date_raw)
+            )
+        except:
+            date_formatted = date_raw
         subject = decode_str(msg.get("Subject"))
         body = get_body(msg)
         message_id = decode_str(msg.get("Message-ID", ""))
         os.makedirs(save_attachments_dir, exist_ok=True)
         attachments = get_attachments(msg, save_dir=save_attachments_dir)
-        print(subject, message_id)
         emails.append(
             {
                 "subject": subject,
                 "text": body,
                 "message_id": message_id,
                 "files": attachments,
+                "sender_email": sender_email,
+                "date": date_formatted,
             }
         )
 

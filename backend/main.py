@@ -18,7 +18,7 @@ from pydantic_models import (
     RequestCreate,
     RequestResponse,
     FetchedMailsResponse,
-    EmailRequest
+    EmailRequest,
 )
 
 POSTGRES_DB_NAME = os.getenv("POSTGRES_DB", "postgres")
@@ -147,7 +147,7 @@ async def get_filtered_requests(
                     issue=row["question_summary"] or "",
                     llm_answer=row["llm_answer"] or "",
                     task_status=row["task_status"] or "OPEN",
-                    message_id=row["message_id"] or ""
+                    message_id=row["message_id"] or "",
                 )
             )
         return result
@@ -249,7 +249,7 @@ async def create_request(request_data: RequestCreate):
             request_data.issue,
             request_data.llm_answer,
             request_data.task_status or "OPEN",
-            request_data.message_id or ""
+            request_data.message_id or "",
         )
 
         return AddNewRow(id=row["request_id"])
@@ -260,10 +260,9 @@ async def get_mails():
     msgs = fetch_emails(limit=10, save_attachments_dir="attachments")
     return msgs
 
+
 @app.post("/api/sendMail")
-async def send_mail_endpoint(
-    request: EmailRequest
-):    
+async def send_mail_endpoint(request: EmailRequest):
     success = await send_email(
         to_emails=request.to_emails,
         subject=request.subject,
@@ -271,9 +270,9 @@ async def send_mail_endpoint(
         html_body=request.html_body,
         from_email=request.from_email,
         message_id=request.message_id,
-        reply_to_thread=True
+        reply_to_thread=True,
     )
-    
+
     if success:
         return {
             "status": "success",
@@ -282,6 +281,7 @@ async def send_mail_endpoint(
         }
     else:
         raise HTTPException(status_code=500, detail="Ошибка отправки email")
+
 
 @app.get("/api/getCsv")
 async def get_table_csv(
@@ -357,6 +357,7 @@ async def get_table_csv(
         },
     )
 
+
 @app.get("/api/getExcel")
 async def get_table_excel(
     full_name: Optional[str] = Query(None),
@@ -381,7 +382,9 @@ async def get_table_excel(
     headers = list(RequestResponse.model_fields.keys())
 
     header_font = Font(bold=True, color="FFFFFF")
-    header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+    header_fill = PatternFill(
+        start_color="366092", end_color="366092", fill_type="solid"
+    )
 
     for col, header in enumerate(headers, 1):
         cell = ws.cell(row=1, column=col, value=header)
@@ -396,27 +399,37 @@ async def get_table_excel(
     while True:
         batch = await get_filtered_requests(
             db_pool=db_pool,
-            full_name=full_name, object_name=object_name, phone=phone,
-            email=email, emotion=emotion, issue=issue,
-            date_from=date_from, date_to=date_to,
+            full_name=full_name,
+            object_name=object_name,
+            phone=phone,
+            email=email,
+            emotion=emotion,
+            issue=issue,
+            date_from=date_from,
+            date_to=date_to,
             task_status=task_status,
-            limit=batch_size, offset=offset,
+            limit=batch_size,
+            offset=offset,
         )
 
         if not batch:
             break
 
         for row in batch:
-            if hasattr(row, 'dict'):
+            if hasattr(row, "dict"):
                 row_dict = row.dict()
-            elif hasattr(row, '__dict__'):
+            elif hasattr(row, "__dict__"):
                 row_dict = row.__dict__
             else:
                 row_dict = dict(row)
-            
+
             for col, header in enumerate(headers, 1):
                 value = row_dict.get(header, "")
-                ws.cell(row=row_num, column=col, value=str(value) if value is not None else "")
+                ws.cell(
+                    row=row_num,
+                    column=col,
+                    value=str(value) if value is not None else "",
+                )
             row_num += 1
 
         offset += batch_size
@@ -448,6 +461,7 @@ async def get_table_excel(
             "Content-Disposition": f'attachment; filename="{filename}"',
         },
     )
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

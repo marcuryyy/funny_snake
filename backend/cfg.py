@@ -1,4 +1,3 @@
-
 PDF_FOLDER = "./instructions_pdf"
 PERSIST_DIRECTORY = "./chroma_db"
 EMBEDDING_MODEL = "DeepPavlov/rubert-base-cased-sentence"

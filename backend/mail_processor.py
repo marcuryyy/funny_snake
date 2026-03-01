@@ -22,9 +22,7 @@ async def process_letter(letter_text: str, message_id: str):
     llm = LLMPipeline()
 
     extracted_data = await llm.extract_data(letter_text)
-    print(letter_text)
     llm_answer = await llm.ask_rag(letter_text)
-    print("ASDSAD", llm_answer)
     if not extracted_data:
         return
 
@@ -39,7 +37,7 @@ async def process_letter(letter_text: str, message_id: str):
         emotion=extracted_data.get("emotional_tone", ""),
         issue=extracted_data.get("issue_summary"),
         llm_answer=llm_answer,
-        message_id=message_id
+        message_id=message_id,
     )
 
     async with httpx.AsyncClient() as api_client:
@@ -52,7 +50,6 @@ async def process_letter(letter_text: str, message_id: str):
 
             if response.status_code == 200 or response.status_code == 201:
                 result = response.json()
-                print(f"{result}")
                 return result
             else:
                 print(f"Текст ошибки: {response.text}")
@@ -66,12 +63,12 @@ async def process_letter(letter_text: str, message_id: str):
 
 
 if __name__ == "__main__":
-    print(11)
     msgs = fetch_emails(1, "output")
-    #   print(msgs)
-    print(1)
+    letter_text = ""
     for msg in msgs:
-        letter_text = msg["text"]
+        letter_text += f"Почта: {msg['sender_email']}\n"
+        letter_text += f"Дата: {msg['date']}\n"
+        letter_text += msg["text"]
         message_id = msg["message_id"]
 
         asyncio.run(process_letter(letter_text, message_id))

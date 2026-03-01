@@ -9,6 +9,7 @@ class FetchedMailsResponse(BaseModel):
     message_id: str
     files: Optional[Union[List[str], List[Dict]]]
 
+
 class EmailRequest(BaseModel):
     to_emails: List[str] = Field(..., min_items=1, max_items=50)
     subject: str = Field(..., max_length=200)
@@ -16,6 +17,7 @@ class EmailRequest(BaseModel):
     html_body: Optional[str] = Field(None, max_length=10000)
     from_email: Optional[str] = Field(None)
     message_id: Optional[str] = Field(None)
+
 
 class RequestBase(BaseModel):
     date: str
