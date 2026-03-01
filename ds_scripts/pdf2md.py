@@ -74,7 +74,9 @@ def process_directory(
 
 
 def main():
-    SOURCE_DIR = Path(r"c:\Users\Admin\Desktop\enigma\eriskip_files\Руководство по эксплуатации1")
+    SOURCE_DIR = Path(
+        r"c:\Users\Admin\Desktop\enigma\eriskip_files\Руководство по эксплуатации1"
+    )
     OUTPUT_DIR = Path(r"c:\Users\Admin\Desktop\enigma\eriskip_files\md_output")
 
     source_dir = SOURCE_DIR.resolve()
@@ -96,7 +98,9 @@ def main():
     )
 
     print("-" * 50)
-    print(f"Готово! Успешно сконвертировано: {len(results)} из {len(list(source_dir.glob('**/*.pdf')))}")
+    print(
+        f"Готово! Успешно сконвертировано: {len(results)} из {len(list(source_dir.glob('**/*.pdf')))}"
+    )
 
     return 0
 
