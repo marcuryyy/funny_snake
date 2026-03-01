@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useAuth } from '../context/AuthContext';
 import AddTicketModal from './AddTicketModal';
 import './TicketsTable.css';
 
@@ -16,10 +17,18 @@ const EMOTION_FILTERS = [
 const STATUS_FILTERS = [
   { value: '', label: 'Все статусы' },
   { value: 'OPEN', label: 'Открыто' },
+  { value: 'IN_PROGRESS', label: 'В работе' },
   { value: 'CLOSED', label: 'Закрыто' },
 ];
 
+const statusLabels = {
+  'OPEN': 'Открыто',
+  'IN_PROGRESS': 'В работе',
+  'CLOSED': 'Закрыто',
+};
+
 function TicketsTable({ onTicketSelect }) {
+  const { getAuthHeaders } = useAuth();
   const [tickets, setTickets] = useState([]);
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
@@ -65,8 +74,17 @@ function TicketsTable({ onTicketSelect }) {
         params.set('task_status', filterStatus);
       }
 
-      const response = await fetch(`${API_URL}?${params.toString()}`);
+      const headers = {
+        ...getAuthHeaders(),
+      };
+
+      const response = await fetch(`${API_URL}?${params.toString()}`, { headers });
       if (!response.ok) {
+        if (response.status === 401) {
+          // Если Unauthorized, перенаправляем на логин
+          window.location.href = '/login';
+          return;
+        }
         throw new Error(`Ошибка HTTP: ${response.status}`);
       }
       const data = await response.json();
@@ -77,11 +95,12 @@ function TicketsTable({ onTicketSelect }) {
     } finally {
       setLoading(false);
     }
-  }, [page, limit, filterEmotion, filterDevice, searchTerm, dateFrom, dateTo, filterStatus]);
+  }, [page, limit, filterEmotion, filterDevice, searchTerm, dateFrom, dateTo, filterStatus, getAuthHeaders]);
 
   const fetchFilters = useCallback(async () => {
     try {
-      const response = await fetch(`${API_URL}?page=1&limit=1000`);
+      const headers = { ...getAuthHeaders() };
+      const response = await fetch(`${API_URL}?page=1&limit=1000`, { headers });
       if (response.ok) {
         const data = await response.json();
         setAvailableDevices([...new Set(data.map((t) => t.deviceType))]);
@@ -89,7 +108,7 @@ function TicketsTable({ onTicketSelect }) {
     } catch (err) {
       console.error('Ошибка загрузки фильтров:', err);
     }
-  }, []);
+  }, [getAuthHeaders]);
 
   useEffect(() => {
     fetchFilters();
@@ -321,7 +340,7 @@ function TicketsTable({ onTicketSelect }) {
                   </td>
                   <td>
                     <span className={`status-badge status-${ticket.task_status?.toLowerCase() || 'open'}`}>
-                      {ticket.task_status === 'CLOSED' ? 'Закрыто' : 'Открыто'}
+                      {statusLabels[ticket.task_status] || 'Открыто'}
                     </span>
                   </td>
                   <td className="issue-cell" title={ticket.issue}>
@@ -343,7 +362,7 @@ function TicketsTable({ onTicketSelect }) {
               <div className="ticket-header">
                 <span className="emotion-badge">{ticket.emotion}</span>
                 <span className={`status-badge status-${ticket.task_status?.toLowerCase() || 'open'}`}>
-                  {ticket.task_status === 'CLOSED' ? 'Закрыто' : 'Открыто'}
+                  {statusLabels[ticket.task_status] || 'Открыто'}
                 </span>
               </div>
               <h3 className="ticket-issue">{ticket.issue}</h3>
