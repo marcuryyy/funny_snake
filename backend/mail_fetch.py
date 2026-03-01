@@ -82,8 +82,6 @@ def get_attachments(msg, save_dir=None):
             filename = decode_str(filename)
             data = part.get_payload(decode=True)
             if save_dir and filename:
-                import os
-
                 path = os.path.join(save_dir, filename)
                 with open(path, "wb") as f:
                     f.write(data)
